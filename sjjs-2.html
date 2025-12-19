@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>卫星数据检索系统</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>
+  <!-- 替换本地图标字体为在线CDN -->
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_2277842_s646dub1bj.css">
+  <!-- Element UI 图标 -->
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <!-- 添加 Font Awesome 作为备用图标库 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    /* 基础样式和变量 */
+    :root {
+      --primary-color: #1648A3;
+      --background-dark: #000B30;
+      --background-light: #061B82;
+      --border-color: rgba(50, 145, 198, 0.3);
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0b9d8;
+      --highlight-color: #4dabf7;
+      --success-color: #67c23a;
+      --warning-color: #e6a23c;
+      --danger-color: #f44336;
+      --card-background: rgba(6, 27, 130, 0.5);
+      --hover-color: rgba(50, 145, 198, 0.3);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Microsoft YaHei", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #000B30 0%, #061B82 100%) fixed;
+      color: #e0e0e0;
+      overflow: hidden;
+      height: 100vh;
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+          linear-gradient(rgba(22, 72, 163, 0.3) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(22, 72, 163, 0.3) 1px, transparent 1px);
+      background-size: 20px 20px;
+      z-index: -1;
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+    }
+
+    .top-nav {
+      height: 60px;
+      background-color: rgba(6, 27, 130, 0.8);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      border-bottom: 1px solid rgba(50, 145, 198, 0.5);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      position: relative;
+      z-index: 10;
+    }
+
+    .system-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 0 10px rgba(50, 145, 198, 0.7);
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      letter-spacing: 0.1em;
+    }
+
+    .user-info {
+      position: absolute;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-info span {
+      display: flex;
+      align-items: center;
+    }
+
+    .user-info i {
+      margin-right: 5px;
+    }
+
+    .logout-btn {
+      background-color: rgba(50, 145, 198, 0.3);
+      color: white;
+      border: 1px solid #3291C6;
+      border-radius: 4px;
+      padding: 5px 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+    }
+
+    .logout-btn:hover {
+      background-color: rgba(50, 145, 198, 0.7);
+      box-shadow: 0 0 10px rgba(50, 145, 198, 0.7);
+    }
+
+    .main-wrapper {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 250px;
+      background-color: rgba(6, 27, 130, 0.7);
+      padding: 20px 0;
+      border-right: 1px solid rgba(50, 145, 198, 0.3);
+      overflow-y: auto;
+    }
+
+    .menu-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #3291C6;
+      padding: 10px 20px;
+      border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+      margin-bottom: 15px;
+    }
+
+    .menu-item {
+      padding: 12px 20px;
+      color: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .menu-item i {
+      margin-right: 10px;
+      color: #4dabf7;
+    }
+
+    .menu-item:hover {
+      background-color: rgba(50, 145, 198, 0.3);
+      color: white;
+    }
+
+    .menu-item.active {
+      background-color: rgba(50, 145, 198, 0.5);
+      color: white;
+      border-left: 3px solid #3291C6;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 15px;
+      overflow: hidden;
+      height: calc(100vh - 60px);
+      background-color: rgba(0, 11, 48, 0.3);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .data-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      overflow: hidden;
+      background-color: transparent !important;
+    }
+
+    .section-container {
+      background: rgba(6, 27, 130, 0.5);
+      border: 1px solid rgba(50, 145, 198, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: none;
+      margin: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .section-container:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .section-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #3291C6, transparent);
+    }
+
+    .section-container::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #3291C6, transparent);
+    }
+
+    .section-title {
+      color: #4dabf7;
+      margin-bottom: 7px;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      padding-bottom: 5px;
+      border-bottom: 1px solid rgba(26, 58, 106, 0.5);
+    }
+
+    .section-title i {
+      margin-right: 10px;
+    }
+
+    .search-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 5px;
+    }
+
+    .search-form-item {
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .search-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    /* 表格容器样式 */
+    .table-container {
+      margin-bottom: 5px;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+      padding: 2px;
+      border-radius: 5px;
+    }
+
+    /* 表格样式 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: transparent;
+      color: #e0e0e0;
+      border: 1px solid rgba(22, 72, 163, 0.6);
+      table-layout: fixed;
+    }
+
+    table th {
+      background-color: transparent;
+      color: #4dabf7;
+      font-weight: 600;
+      border-bottom: 2px solid rgba(50, 145, 198, 0.8);
+      padding: 8px 10px;
+      text-shadow: 0 0 5px rgba(77, 171, 247, 0.5);
+      text-align: left;
+      position: relative;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 14px;
+    }
+
+    table td {
+      background-color: transparent;
+      border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+      padding: 8px 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 13px;
+    }
+
+    table tr:hover td {
+      background-color: rgba(50, 145, 198, 0.2);
+    }
+
+    .table-scroll-container {
+      height: calc(100% - 110px);
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+
+    /* 自定义按钮 */
+    .btn {
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Element UI 按钮样式 */
+    .el-button {
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+
+    .el-button--default, .btn-default, #resetBtn {
+      background-color: rgba(19, 62, 151, 0.4) !important;
+      border-color: rgba(50, 145, 198, 0.5) !important;
+      color: var(--text-primary) !important;
+    }
+
+    .el-button--default:hover, .btn-default:hover, #resetBtn:hover {
+      background-color: rgba(19, 62, 151, 0.6) !important;
+      border-color: var(--highlight-color) !important;
+      box-shadow: 0 0 8px rgba(50, 145, 198, 0.5);
+    }
+
+    .el-button--primary, .btn-primary, #searchBtn {
+      background-color: rgba(22, 72, 163, 0.8) !important;
+      border-color: rgba(50, 145, 198, 0.8) !important;
+      color: white !important;
+    }
+
+    .el-button--primary:hover, .el-button--primary:focus, .btn-primary:hover, #searchBtn:hover, .btn-primary:focus, #searchBtn:focus {
+      background-color: rgba(50, 145, 198, 0.8) !important;
+      border-color: var(--highlight-color) !important;
+      box-shadow: 0 0 8px rgba(77, 171, 247, 0.7);
+    }
+
+    .btn-primary {
+      background-color: rgba(22, 72, 163, 0.8);
+      border: 1px solid #1648A3;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: rgba(22, 72, 163, 1);
+      box-shadow: 0 0 10px rgba(22, 72, 163, 0.5);
+    }
+
+    .btn-text {
+      background: none;
+      border: none;
+      color: #4dabf7;
+      font-weight: 600;
+      transition: all 0.3s;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 3px 6px;
+    }
+
+    .btn-text:hover {
+      color: #ffffff;
+      text-shadow: 0 0 8px rgba(77, 171, 247, 0.8);
+    }
+
+    /* 标签样式 */
+    .custom-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+
+    .custom-tag-info {
+      background-color: rgba(64, 158, 255, 0.1);
+      border-color: rgba(64, 158, 255, 0.5);
+      color: #409eff;
+    }
+
+    .custom-tag-success {
+      background-color: rgba(103, 194, 58, 0.1);
+      border-color: rgba(103, 194, 58, 0.5);
+      color: #67c23a;
+    }
+
+    .custom-tag-warning {
+      background-color: rgba(230, 162, 60, 0.1);
+      border-color: rgba(230, 162, 60, 0.5);
+      color: #e6a23c;
+    }
+
+    .custom-tag-danger {
+      background-color: rgba(245, 108, 108, 0.1);
+      border-color: rgba(245, 108, 108, 0.5);
+      color: #f56c6c;
+    }
+
+    .custom-tag-primary {
+      background-color: rgba(64, 158, 255, 0.1);
+      border-color: rgba(64, 158, 255, 0.5);
+      color: #409eff;
+    }
+
+    /* 输入框样式 */
+    .custom-select, .custom-input, .custom-date-picker {
+      width: 100%;
+      padding: 8px;
+      background-color: rgba(6, 27, 130, 0.3);
+      border: 1px solid rgba(50, 145, 198, 0.5);
+      color: #e0e0e0;
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+
+    .custom-select:focus, .custom-input:focus, .custom-date-picker:focus {
+      border-color: #4dabf7;
+      box-shadow: 0 0 8px rgba(77, 171, 247, 0.6);
+      outline: none;
+    }
+
+    .custom-select option {
+      background-color: #061B82;
+      color: #e0e0e0;
+    }
+
+    /* 分页控件 */
+    .custom-pagination {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 10px 0;
+      font-size: 13px;
+    }
+
+    #pagerItems {
+      display: flex;
+      align-items: center;
+    }
+
+    .custom-pagination button.btn-text {
+      background: none;
+      border: none;
+      color: #4dabf7;
+      font-weight: 600;
+      transition: all 0.3s;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 3px 6px;
+    }
+
+    .custom-pagination button.btn-text:hover {
+      color: white;
+      text-shadow: 0 0 5px rgba(77, 171, 247, 0.7);
+    }
+
+    .custom-pagination button.btn-text:disabled {
+      color: rgba(224, 224, 224, 0.3);
+      cursor: not-allowed;
+    }
+
+    .custom-pagination button.active {
+      color: #fff;
+      background-color: rgba(77, 171, 247, 0.5);
+    }
+
+    .custom-pagination input {
+      background-color: rgba(10, 20, 50, 0.7);
+      border: 1px solid rgba(50, 145, 198, 0.3);
+      color: #e0e0e0;
+      border-radius: 4px;
+      padding: 2px 5px;
+      width: 40px;
+      text-align: center;
+    }
+
+    /* 图表样式 */
+    .chart {
+      width: 100%;
+      height: calc(100% - 30px);
+    }
+
+    /* 日期范围选择器 */
+    .date-range-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .date-range-separator {
+      margin: 0 5px;
+      color: #e0e0e0;
+    }
+    
+    /* 自定义日期选择器样式 */
+    .custom-date-picker-wrapper {
+      position: relative;
+      flex: 1;
+    }
+    
+    .custom-date-picker {
+      width: 100%;
+      padding: 8px 30px 8px 8px; /* 增加右边距，为图标留出空间 */
+      background-color: rgba(6, 27, 130, 0.3);
+      border: 1px solid rgba(50, 145, 198, 0.5);
+      color: #e0e0e0;
+      border-radius: 4px;
+      transition: all 0.3s;
+      appearance: none; /* 移除默认样式 */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      position: relative;
+      z-index: 1;
+      background-image: none !important; /* 强制移除默认图标 */
+    }
+
+    .custom-date-picker::-webkit-calendar-picker-indicator {
+      opacity: 0; /* 隐藏Webkit浏览器的日历图标 */
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      cursor: pointer;
+    }
+
+    .custom-date-picker:focus {
+      border-color: #4dabf7;
+      box-shadow: 0 0 8px rgba(77, 171, 247, 0.6);
+      outline: none;
+    }
+    
+    .date-picker-icon {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #4dabf7;
+      pointer-events: none; /* 让点击穿透到input */
+      z-index: 2;
+    }
+
+    /* 滚动条样式 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(13, 32, 64, 0.5);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(77, 171, 247, 0.5);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(77, 171, 247, 0.8);
+    }
+
+    /* 状态指示器 */
+    .status-active {
+      color: #67c23a !important;
+      font-weight: 600;
+      text-shadow: 0 0 5px rgba(103, 194, 58, 0.5);
+    }
+
+    .status-inactive {
+      color: #f56c6c !important;
+      font-weight: 600;
+      text-shadow: 0 0 5px rgba(245, 108, 108, 0.5);
+    }
+
+    .status-warning {
+      color: #e6a23c !important;
+      font-weight: 600;
+      text-shadow: 0 0 5px rgba(230, 162, 60, 0.5);
+    }
+
+    /* 修改2：移除圆环图和图例的深色外边线 */
+    #sourceChart .highcharts-point,
+    #dataTypeChart .highcharts-point {
+      stroke: transparent !important;
+      stroke-width: 0 !important;
+    }
+
+    #sourceChart .highcharts-legend-item .highcharts-point,
+    #dataTypeChart .highcharts-legend-item .highcharts-point {
+      stroke: transparent !important;
+      stroke-width: 0 !important;
+    }
+
+    /* 如果使用的是ECharts，则应用以下样式 */
+    #sourceChart .echarts-legend-item,
+    #dataTypeChart .echarts-legend-item {
+      border: none !important;
+      stroke-width: 0 !important;
+    }
+
+    /* 修改圆环图的边线 */
+    #sourceChart path,
+    #dataTypeChart path {
+      stroke-width: 0 !important;
+    }
+    
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <div class="top-nav">
+    <div class="system-title">
+      <i class="icon-fallback fas fa-satellite-dish" style="display:none;"></i>
+      数据存储
+    </div>
+    <div class="user-info">
+      <span><i class="el-icon-s-tools" style="display:none;"></i> 管理员</span>
+      <button class="logout-btn"><i class="icon-fallback fas fa-sign-out-alt" style="display:none;"></i> 退出</button>
+    </div>
+    
+  </div>
+  
+  <div class="main-wrapper">
+    <!-- 左侧菜单栏 -->
+    <div class="sidebar">
+      <div class="menu-title">数据存储</div>
+      <div class="menu-item active">
+        <i class="el-icon-search"></i>
+        <span>数据检索</span>
+      </div>
+      <div class="menu-item">
+        <i class="el-icon-folder"></i>
+        <span>数据归档</span>
+      </div>
+      <div class="menu-item">
+        <i class="el-icon-data-line"></i>
+        <span>数据统计</span>
+      </div>
+    </div>
+
+    <!-- 主体内容区 -->
+    <div class="main-content">
+      <div class="data-container">
+        <!-- 搜索组件 -->
+        <div class="section-container">
+          <div class="section-title">
+            <i class="el-icon-search"></i>
+            <span>数据检索条件</span>
+          </div>
+          <div class="search-form">
+            <div class="search-form-item">
+              <select id="category" class="custom-select">
+                <option value="">全部类别</option>
+                <option value="日志数据">日志数据</option>
+                <option value="观测数据">观测数据</option>
+                <option value="气象数据">气象数据</option>
+                <option value="星历数据">星历数据</option>
+                <option value="站点数据">站点数据</option>
+                <option value="产品数据">产品数据</option>
+              </select>
+            </div>
+            <div class="search-form-item">
+              <input type="text" id="keyword" class="custom-input" placeholder="请输入关键字">
+            </div>
+            <div class="search-form-item">
+              <select id="satId" class="custom-select">
+                <option value="">全部卫星</option>
+                <option value="1">卫星1</option>
+                <option value="2">卫星2</option>
+                <option value="3">卫星3</option>
+              </select>
+            </div>
+            <div class="search-form-item">
+              <select id="staId" class="custom-select">
+                <option value="">全部站</option>
+                <option value="1">站1</option>
+                <option value="2">站2</option>
+                <option value="3">站3</option>
+              </select>
+            </div>
+            <div class="search-form-item">
+              <div class="date-range-container">
+                <div class="custom-date-picker-wrapper">
+                  <input type="date" id="startDate" class="custom-date-picker">
+                  <i class="el-icon-date date-picker-icon"></i>
+                </div>
+                <span class="date-range-separator">至</span>
+                <div class="custom-date-picker-wrapper">
+                  <input type="date" id="endDate" class="custom-date-picker">
+                  <i class="el-icon-date date-picker-icon"></i>
+                </div>
+              </div>
+            </div>
+            <div class="search-buttons">
+              <button id="resetBtn" class="btn el-button el-button--default">重置</button>
+              <button id="searchBtn" class="btn btn-primary el-button el-button--primary">查询</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 主数据展示区（表格和图表横向排列） -->
+        <div class="section-container" style="flex: 1; display: flex; gap: 15px; overflow: hidden;">
+          <!-- 表格区域 -->
+          <div class="table-container" style="flex: 1.2;">
+            <div class="section-title">
+              <i class="el-icon-tickets"></i>
+              <span>数据存储信息</span>
+            </div>
+            <div class="table-scroll-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th width="180">数据标识</th>
+                    <th width="180">名称</th>
+                    <th>类别</th>
+                    <th width="180">创建时间</th>
+                    <th width="180">更新时间</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody">
+                  <!-- 表格内容将由JavaScript动态生成 -->
+                </tbody>
+              </table>
+            </div>
+            <div class="custom-pagination" id="pagination">
+              <!-- 分页将由JavaScript动态生成 -->
+              <span style="margin-right: 15px;">共 <span id="totalCount">0</span> 条</span>
+              <select id="pageSizeSelect" class="custom-select" style="width: auto; margin-right: 15px;">
+                <option value="10">10条/页</option>
+                <option value="20">20条/页</option>
+                <option value="50">50条/页</option>
+                <option value="100">100条/页</option>
+              </select>
+              <button class="btn btn-text" id="prevPage">上一页</button>
+              <div id="pagerItems" style="display: flex;"></div>
+              <button class="btn btn-text" id="nextPage">下一页</button>
+              <div style="margin-left: 15px;">
+                跳至<input type="number" id="jumpPage" min="1" style="width: 50px; margin: 0 5px;" class="custom-input">页
+                <button class="btn btn-text" id="jumpBtn">跳转</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 图表区域（纵向排列） -->
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 15px; overflow: hidden;">
+            <div class="section-container" style="flex: 1;">
+              <div class="section-title">
+                <i class="el-icon-data-analysis"></i>
+                <span>数据量统计</span>
+              </div>
+              <div id="dataTypeChart" class="chart"></div>
+            </div>
+            <div style="display: flex; gap: 15px; flex: 1;">
+              <div class="section-container" style="flex: 1.5;">
+                <div class="section-title">
+                  <i class="el-icon-share"></i>
+                  <span>数据来源分布</span>
+                </div>
+                <div id="sourceChart" class="chart"></div>
+              </div>
+              <div class="section-container" style="flex: 1;">
+                <div class="section-title">
+                  <i class="el-icon-s-data"></i>
+                  <span>观测数据统计</span>
+                </div>
+                <div id="observationChart" class="chart"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 全局变量
+  let tableData = [];
+  let currentPage = 1;
+  let pageSize = 10;
+  let total = 0;
+  let dataTypeChart = null;
+  let sourceChart = null;
+  let observationChart = null;
+
+  // 页面加载完成后执行
+  document.addEventListener('DOMContentLoaded', function() {
+    // 初始化图表
+    initCharts();
+    // 获取表格数据
+    fetchTableData();
+    // 添加窗口调整监听
+    window.addEventListener('resize', handleResize);
+    
+    // 添加搜索按钮事件
+    document.getElementById('searchBtn').addEventListener('click', handleSearch);
+    // 添加重置按钮事件
+    document.getElementById('resetBtn').addEventListener('click', resetSearch);
+    // 添加分页事件
+    document.getElementById('prevPage').addEventListener('click', () => handlePageChange(currentPage - 1));
+    document.getElementById('nextPage').addEventListener('click', () => handlePageChange(currentPage + 1));
+    document.getElementById('jumpBtn').addEventListener('click', handleJumpPage);
+    document.getElementById('pageSizeSelect').addEventListener('change', handleSizeChange);
+    
+    // 初始化日期选择器
+    initDatePickers();
+    
+    // 确保Element UI图标正确显示
+    ensureElementIconsDisplay();
+  });
+
+  // 初始化图表
+  function initCharts() {
+    // 数据量统计柱状图
+    dataTypeChart = echarts.init(document.getElementById('dataTypeChart'));
+    dataTypeChart.setOption({
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: ['观测数据', '气象数据', '星历数据', '站点数据', '产品数据', '日志数据'],
+        axisLine: {
+          lineStyle: {
+            color: '#4dabf7'
+          }
+        },
+        axisLabel: {
+          color: '#e0e0e0'
+        }
+      },
+      yAxis: {
+        type: 'value',
+        axisLine: {
+          lineStyle: {
+            color: '#4dabf7'
+          }
+        },
+        axisLabel: {
+          color: '#e0e0e0'
+        },
+        splitLine: {
+          lineStyle: {
+            color: '#1a3a6a'
+          }
+        }
+      },
+      series: [{
+        name: '数据量',
+        type: 'bar',
+        data: [1250, 890, 670, 450, 320, 280],
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#83bff6' },
+            { offset: 0.5, color: '#188df0' },
+            { offset: 1, color: '#0077e6' }
+          ])
+        },
+        emphasis: {
+          itemStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: '#2378f7' },
+              { offset: 0.7, color: '#2378f7' },
+              { offset: 1, color: '#83bff6' }
+            ])
+          }
+        },
+        borderWidth: 0
+      }]
+    });
+
+    // 数据来源分布饼图
+    sourceChart = echarts.init(document.getElementById('sourceChart'));
+    sourceChart.setOption({
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item'
+      },
+      legend: {
+        orient: 'horizontal',
+        textStyle: {
+          color: '#e0e0e0'
+        }
+      },
+      series: [
+        {
+          name: '数据来源',
+          type: 'pie',
+          radius: ['40%', '70%'],
+          center: ['50%', '60%'],
+          avoidLabelOverlap: false,
+          itemStyle: {
+            borderRadius: 10,
+            borderColor: 'transparent',
+            borderWidth: 0
+          },
+          label: {
+            show: false,
+            position: 'center'
+          },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: '18',
+              fontWeight: 'bold',
+              color: '#4dabf7'
+            }
+          },
+          labelLine: {
+            show: false
+          },
+          data: [
+            { value: 335, name: '星基增强监测站' },
+            { value: 310, name: '地基增强基准站' },
+            { value: 234, name: '低轨运控' },
+            { value: 135, name: '业务处理分系统' },
+            { value: 154, name: '监测评估分系统' },
+            { value: 105, name: '分系统内部' }
+          ],
+          color: ['#4dabf7', '#37c2d0', '#58d7a1', '#f6c54d', '#f47f7f', '#b37feb'],
+          borderWidth: 0
+        }
+      ]
+    });
+
+    // 观测数据统计饼图
+    observationChart = echarts.init(document.getElementById('observationChart'));
+    observationChart.setOption({
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item'
+      },
+      legend: {
+        orient: 'horizontal',
+        textStyle: {
+          color: '#e0e0e0'
+        }
+      },
+      series: [
+        {
+          name: '观测数据类型',
+          type: 'pie',
+          radius: ['40%', '70%'],
+          avoidLabelOverlap: false,
+          itemStyle: {
+            borderRadius: 10,
+            borderColor: 'transparent',
+            borderWidth: 0
+          },
+          label: {
+            show: false,
+            position: 'center'
+          },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: '18',
+              fontWeight: 'bold',
+              color: '#4dabf7'
+            }
+          },
+          labelLine: {
+            show: false
+          },
+          data: [
+            { value: 735, name: '热数据' },
+            { value: 510, name: '温数据' },
+            { value: 234, name: '冷数据' }
+          ],
+          color: ['#ff7e7e', '#4dabf7', '#58d7a1'],
+          borderWidth: 0
+        }
+      ]
+    });
+  }
+
+  // 获取表格数据
+  function fetchTableData() {
+    // 模拟数据
+    const mockData = [];
+    const categories = ['日志数据', '观测数据', '气象数据', '星历数据', '站点数据', '产品数据'];
+    const now = new Date();
+
+    for (let i = 1; i <= 50; i++) {
+      const category = categories[Math.floor(Math.random() * categories.length)];
+      const createTime = new Date(now.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000);
+      const updateTime = new Date(createTime.getTime() + Math.random() * 24 * 60 * 60 * 1000);
+
+      mockData.push({
+        id: 'DATA-' + (10000 + i).toString().substring(1),
+        name: category.replace('数据', '样本') + '-' + i,
+        category: category,
+        createTime: formatDate(createTime),
+        updateTime: formatDate(updateTime)
+      });
+    }
+
+    // 处理筛选条件
+    const category = document.getElementById('category').value;
+    const keyword = document.getElementById('keyword').value;
+    const satId = document.getElementById('satId').value;
+    const staId = document.getElementById('staId').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    // 简单过滤
+    let filteredData = mockData;
+    if (category) {
+      filteredData = filteredData.filter(item => item.category === category);
+    }
+    if (keyword) {
+      filteredData = filteredData.filter(item => 
+        item.id.toLowerCase().includes(keyword.toLowerCase()) || 
+        item.name.toLowerCase().includes(keyword.toLowerCase()) ||
+        item.category.toLowerCase().includes(keyword.toLowerCase())
+      );
+    }
+
+    tableData = filteredData;
+    total = filteredData.length;
+    
+    // 分页处理
+    const start = (currentPage - 1) * pageSize;
+    const end = Math.min(start + pageSize, total);
+    const pageData = filteredData.slice(start, end);
+    
+    // 更新表格
+    renderTable(pageData);
+    
+    // 更新分页
+    updatePagination();
+    
+    // 更新总数显示
+    document.getElementById('totalCount').textContent = total;
+  }
+
+  // 渲染表格
+  function renderTable(data) {
+    const tableBody = document.getElementById('tableBody');
+    tableBody.innerHTML = '';
+    
+    if (data.length === 0) {
+      const emptyRow = document.createElement('tr');
+      const emptyCell = document.createElement('td');
+      emptyCell.colSpan = 5;
+      emptyCell.textContent = '暂无数据';
+      emptyCell.style.textAlign = 'center';
+      emptyRow.appendChild(emptyCell);
+      tableBody.appendChild(emptyRow);
+      return;
+    }
+    
+    data.forEach(item => {
+      const row = document.createElement('tr');
+      
+      // 数据标识
+      const idCell = document.createElement('td');
+      idCell.textContent = item.id;
+      row.appendChild(idCell);
+      
+      // 名称
+      const nameCell = document.createElement('td');
+      nameCell.textContent = item.name;
+      row.appendChild(nameCell);
+      
+      // 类别 (用自定义 tag)
+      const categoryCell = document.createElement('td');
+      const tag = document.createElement('span');
+      tag.textContent = item.category;
+      tag.className = 'custom-tag custom-tag-' + getTagType(item.category);
+      categoryCell.appendChild(tag);
+      row.appendChild(categoryCell);
+      
+      // 创建时间
+      const createTimeCell = document.createElement('td');
+      createTimeCell.textContent = item.createTime;
+      row.appendChild(createTimeCell);
+      
+      // 更新时间
+      const updateTimeCell = document.createElement('td');
+      updateTimeCell.textContent = item.updateTime;
+      row.appendChild(updateTimeCell);
+      
+      tableBody.appendChild(row);
+    });
+  }
+
+  // 更新分页
+  function updatePagination() {
+    // 更新分页器
+    const pagerItems = document.getElementById('pagerItems');
+    pagerItems.innerHTML = '';
+    
+    // 计算总页数
+    const totalPages = Math.ceil(total / pageSize);
+    
+    // 生成分页按钮
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+    if (endPage - startPage < 4) {
+      startPage = Math.max(1, endPage - 4);
+    }
+    
+    // 第一页
+    if (startPage > 1) {
+      const firstPage = document.createElement('button');
+      firstPage.className = 'btn btn-text';
+      firstPage.textContent = '1';
+      firstPage.addEventListener('click', () => handlePageChange(1));
+      pagerItems.appendChild(firstPage);
+      
+      if (startPage > 2) {
+        const ellipsis = document.createElement('span');
+        ellipsis.textContent = '...';
+        ellipsis.style.margin = '0 5px';
+        pagerItems.appendChild(ellipsis);
+      }
+    }
+    
+    // 页码按钮
+    for (let i = startPage; i <= endPage; i++) {
+      const pageBtn = document.createElement('button');
+      pageBtn.className = 'btn btn-text';
+      if (i === currentPage) {
+        pageBtn.style.color = '#fff';
+        pageBtn.style.backgroundColor = 'rgba(77, 171, 247, 0.5)';
+      }
+      pageBtn.textContent = i;
+      pageBtn.addEventListener('click', () => handlePageChange(i));
+      pagerItems.appendChild(pageBtn);
+    }
+    
+    // 最后一页
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        const ellipsis = document.createElement('span');
+        ellipsis.textContent = '...';
+        ellipsis.style.margin = '0 5px';
+        pagerItems.appendChild(ellipsis);
+      }
+      
+      const lastPage = document.createElement('button');
+      lastPage.className = 'btn btn-text';
+      lastPage.textContent = totalPages;
+      lastPage.addEventListener('click', () => handlePageChange(totalPages));
+      pagerItems.appendChild(lastPage);
+    }
+    
+    // 设置上一页下一页按钮状态
+    document.getElementById('prevPage').disabled = currentPage === 1;
+    document.getElementById('nextPage').disabled = currentPage === totalPages;
+    
+    // 更新跳转框
+    document.getElementById('jumpPage').value = currentPage;
+    
+    // 更新每页条数选择
+    document.getElementById('pageSizeSelect').value = pageSize;
+  }
+
+  // 处理页码变化
+  function handlePageChange(page) {
+    if (page < 1 || page > Math.ceil(total / pageSize)) return;
+    
+    currentPage = page;
+    fetchTableData();
+  }
+
+  // 处理页码跳转
+  function handleJumpPage() {
+    const jumpPage = parseInt(document.getElementById('jumpPage').value);
+    if (isNaN(jumpPage)) return;
+    
+    handlePageChange(jumpPage);
+  }
+
+  // 处理每页显示条数变化
+  function handleSizeChange() {
+    pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+    currentPage = 1;
+    fetchTableData();
+  }
+
+  // 处理搜索按钮点击
+  function handleSearch() {
+    currentPage = 1;
+    fetchTableData();
+  }
+
+  // 重置搜索条件
+  function resetSearch() {
+    document.getElementById('category').value = '';
+    document.getElementById('keyword').value = '';
+    document.getElementById('satId').value = '';
+    document.getElementById('staId').value = '';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    
+    currentPage = 1;
+    fetchTableData();
+  }
+
+  // 格式化日期
+  function formatDate(date) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  }
+
+  // 获取标签类型
+  function getTagType(category) {
+    const map = {
+      '日志数据': 'info',
+      '观测数据': '',
+      '气象数据': 'success',
+      '星历数据': 'warning',
+      '站点数据': 'danger',
+      '产品数据': 'primary'
+    };
+    return map[category] || '';
+  }
+
+  // 处理窗口大小变化
+  function handleResize() {
+    dataTypeChart && dataTypeChart.resize();
+    sourceChart && sourceChart.resize();
+    observationChart && observationChart.resize();
+  }
+
+  // 初始化日期选择器
+  function initDatePickers() {
+    // 设置默认日期范围（当前月的第一天到今天）
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    // 格式化日期为YYYY-MM-DD
+    const formatDateForInput = (date) => {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    // 设置默认日期
+    document.getElementById('startDate').value = formatDateForInput(firstDayOfMonth);
+    document.getElementById('endDate').value = formatDateForInput(today);
+    
+    // 为日期选择器添加change事件
+    document.getElementById('startDate').addEventListener('change', function() {
+      // 确保开始日期不晚于结束日期
+      const startDate = new Date(this.value);
+      const endDate = new Date(document.getElementById('endDate').value);
+      
+      if (startDate > endDate) {
+        document.getElementById('endDate').value = this.value;
+      }
+    });
+    
+    document.getElementById('endDate').addEventListener('change', function() {
+      // 确保结束日期不早于开始日期
+      const startDate = new Date(document.getElementById('startDate').value);
+      const endDate = new Date(this.value);
+      
+      if (endDate < startDate) {
+        document.getElementById('startDate').value = this.value;
+      }
+    });
+  }
+  
+  // 确保Element UI图标正确显示
+  function ensureElementIconsDisplay() {
+    // 检查是否成功加载Element UI图标
+    const icons = document.querySelectorAll('.el-icon-date');
+    let allIconsVisible = true;
+    
+    icons.forEach(icon => {
+      // 检查图标是否可见（有宽度）
+      if (icon.offsetWidth === 0) {
+        allIconsVisible = false;
+      }
+    });
+    
+    if (!allIconsVisible) {
+      // 如果图标不可见，尝试注入Element UI图标的CSS
+      const style = document.createElement('style');
+      style.textContent = `
+        .el-icon-date:before {
+          content: "\\e78e"; /* Element UI的日期图标unicode */
+        }
+        
+        [class*=" el-icon-"], [class^=el-icon-] {
+          font-family: element-icons!important;
+          speak: none;
+          font-style: normal;
+          font-weight: 400;
+          font-variant: normal;
+          text-transform: none;
+          line-height: 1;
+          vertical-align: baseline;
+          display: inline-block;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // 如果仍然不可见，使用Font Awesome图标作为备用
+      setTimeout(() => {
+        icons.forEach(icon => {
+          if (icon.offsetWidth === 0) {
+            icon.classList.remove('el-icon-date');
+            icon.classList.add('fas', 'fa-calendar-alt');
+          }
+        });
+      }, 300);
+    }
+    
+    // 确保日期选择器不超出边界
+    setupDatePickerBoundaries();
+  }
+  
+  // 确保日期选择框不超出边界
+  function setupDatePickerBoundaries() {
+    const datePickers = document.querySelectorAll('.custom-date-picker');
+    
+    datePickers.forEach(picker => {
+      // 监听日期选择器的点击事件
+      picker.addEventListener('click', function() {
+        // 获取当前日期选择器的位置信息
+        const rect = this.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // 如果点击位置接近屏幕右边界，添加类使日历向左打开
+        if (rect.right > viewportWidth - 300) {
+          this.classList.add('date-picker-left');
+        } else {
+          this.classList.remove('date-picker-left');
+        }
+        
+        // 如果点击位置接近屏幕底部，添加类使日历向上打开
+        if (rect.bottom > viewportHeight - 300) {
+          this.classList.add('date-picker-top');
+        } else {
+          this.classList.remove('date-picker-top');
+        }
+      });
+    });
+
+    // 添加额外的CSS样式来控制日期选择器的位置
+    const style = document.createElement('style');
+    style.textContent = `
+      /* 使日历不超出右边界 */
+      .custom-date-picker.date-picker-left::-webkit-calendar-picker-indicator {
+        position: absolute;
+        right: 0;
+        transform-origin: right;
+      }
+      
+      /* 使日历不超出底部边界 */
+      .custom-date-picker.date-picker-top::-webkit-calendar-picker-indicator {
+        position: absolute;
+        bottom: 100%;
+        transform-origin: bottom;
+      }
+      
+      /* 确保日期选择器的字段不被截断 */
+      .search-form-item {
+        position: relative;
+        overflow: visible;
+      }
+      
+      /* 确保日期范围容器不溢出 */
+      .date-range-container {
+        overflow: visible;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+</script>
+</body>
+</html> 

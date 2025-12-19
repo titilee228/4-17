@@ -1,0 +1,2616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卫星数据接入系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>
+    <!-- 替换本地图标字体为在线CDN -->
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_2277842_s646dub1bj.css">
+    <!-- Element UI 图标 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 添加 Font Awesome 作为备用图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #000B30 0%, #061B82 100%) fixed;
+            color: #e0e0e0;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+            width: 1920px;
+            height: 1080px;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(rgba(22, 72, 163, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(22, 72, 163, 0.3) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+        }
+
+        .top-nav {
+            height: 60px;
+            background-color: rgba(6, 27, 130, 0.8);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.5);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 10;
+        }
+
+        .system-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 10px rgba(50, 145, 198, 0.7);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            letter-spacing: 0.1em;
+        }
+
+        .user-info {
+            position: absolute;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info::before {
+           /* font-size: 16px;
+            font-family: 'iconfont';
+            content: '\e619';*/
+        }
+        
+
+        .logout-btn {
+            background-color: rgba(50, 145, 198, 0.3);
+            color: white;
+            border: 1px solid #3291C6;
+            border-radius: 4px;
+            padding: 5px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(50, 145, 198, 0.7);
+            box-shadow: 0 0 10px rgba(50, 145, 198, 0.7);
+        }
+
+        .main-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: rgba(6, 27, 130, 0.7);
+            padding: 20px 0;
+            border-right: 1px solid rgba(50, 145, 198, 0.3);
+            overflow-y: auto;
+        }
+
+        .menu-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #3291C6;
+            padding: 10px 20px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+            margin-bottom: 15px;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(50, 145, 198, 0.3);
+            color: white;
+        }
+
+        .menu-item.active {
+            background-color: rgba(50, 145, 198, 0.5);
+            color: white;
+            border-left: 3px solid #3291C6;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 15px;
+            overflow: hidden;
+            height: calc(100vh - 60px);
+            background-color: rgba(0, 11, 48, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .data-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+            overflow: hidden;
+            background-color: transparent !important;
+        }
+
+        .section-container {
+            background: rgba(6, 27, 130, 0.5);
+            border: 1px solid rgba(50, 145, 198, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: none;
+            margin: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .section-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3291C6, transparent);
+        }
+
+        .section-container::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3291C6, transparent);
+        }
+
+        .section-title {
+            color: #4dabf7;
+            margin-bottom: 7px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(26, 58, 106, 0.5);
+        }
+
+        .section-title i {
+            margin-right: 10px;
+        }
+
+        /* 表格容器样式 */
+        .table-container {
+            margin-bottom: 5px;
+            flex: 1;
+            min-height: 0;
+            width: 0;
+            overflow: hidden;
+            position: relative;
+            padding: 2px;
+            border-radius: 5px;
+            max-width: 100%;
+        }
+
+        /* 恢复表格容器的装饰边框 */
+        .table-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #1648A3, transparent);
+            z-index: 1;
+        }
+
+        .table-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #1648A3, transparent);
+            z-index: 1;
+        }
+
+        /* 添加表格溢出控制 */
+        .flex-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 表格样式更新为更紧凑的布局 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: transparent;
+            color: #e0e0e0;
+            border: 1px solid rgba(22, 72, 163, 0.6);
+            table-layout: fixed; /* 固定表格布局 */
+        }
+
+        table th {
+            background-color: transparent;
+            color: #4dabf7;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(50, 145, 198, 0.8);
+            padding: 4px 5px; /* 减小内边距使其更紧凑 */
+            text-shadow: 0 0 5px rgba(77, 171, 247, 0.5);
+            text-align: left;
+            position: relative;
+            white-space: nowrap; /* 防止换行 */
+            overflow: hidden;
+            text-overflow: ellipsis; /* 超出显示省略号 */
+            font-size: 13px; /* 减小字体大小 */
+        }
+
+        table td {
+            background-color: transparent;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+            padding: 4px 5px; /* 减小内边距 */
+            white-space: nowrap; /* 防止换行 */
+            overflow: hidden;
+            text-overflow: ellipsis; /* 超出显示省略号 */
+            font-size: 12px; /* 减小字体大小 */
+        }
+
+        /* 状态颜色 */
+        .status-active {
+            color: #67c23a !important;
+            font-weight: 600;
+            text-shadow: 0 0 5px rgba(103, 194, 58, 0.5);
+        }
+
+        .status-inactive {
+            color: #f56c6c !important;
+            font-weight: 600;
+            text-shadow: 0 0 5px rgba(245, 108, 108, 0.5);
+        }
+
+        .status-warning {
+            color: #e6a23c !important;
+            font-weight: 600;
+            text-shadow: 0 0 5px rgba(230, 162, 60, 0.5);
+        }
+
+        .log-normal {
+            color: #67c23a !important;
+            font-weight: 600;
+            text-shadow: 0 0 5px rgba(103, 194, 58, 0.5);
+        }
+
+        .log-warning {
+            color: #e6a23c !important;
+            font-weight: 600;
+            text-shadow: 0 0 5px rgba(230, 162, 60, 0.5);
+        }
+
+        .log-error {
+            color: #f56c6c !important;
+            font-weight: 600;
+            text-shadow: 0 0 5px rgba(245, 108, 108, 0.5);
+        }
+
+        /* Tab 样式 */
+        .tabs {
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .tab-header {
+            background-color: rgba(6, 27, 130, 0.5);
+            border-radius: 4px 4px 0 0;
+            border-bottom: none;
+            padding: 0 5px;
+            margin: 0;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap; /* 允许选项卡换行 */
+        }
+
+        .tab-item {
+            border: 1px solid rgba(50, 145, 198, 0.3);
+            margin: 4px 2px 0;
+            background-color: rgba(13, 32, 64, 0.6);
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            height: 28px; /* 减小高度 */
+            line-height: 28px; /* 对应减小的高度 */
+            transition: all 0.3s;
+            padding: 0 10px; /* 减小左右内边距 */
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: 12px; /* 减小字体大小 */
+            white-space: nowrap;
+        }
+
+        .tab-item.active {
+            background-color: rgba(50, 145, 198, 0.3);
+            border-color: #4dabf7;
+            color: #ffffff;
+        }
+        
+        .tab-item:hover {
+            color: #4dabf7;
+            background-color: rgba(50, 145, 198, 0.2);
+        }
+        
+        .tab-content {
+            background-color: rgba(6, 27, 130, 0.2);
+            border-radius: 0 0 4px 4px;
+            padding: 6px; /* 减小内边距 */
+            border: 1px solid rgba(50, 145, 198, 0.3);
+            border-top: none;
+            margin-top: -1px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        
+        .tab-pane {
+            width: 100%;
+            box-sizing: border-box;
+            display: none;
+            overflow: hidden;
+        }
+        
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 6px 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 4px;
+        }
+
+        .btn-primary {
+            background-color: rgba(22, 72, 163, 0.8);
+            border: 1px solid #1648A3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: rgba(22, 72, 163, 1);
+            box-shadow: 0 0 10px rgba(22, 72, 163, 0.5);
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: #4dabf7;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+            font-size: 12px; /* 减小字体大小 */
+            padding: 2px 4px; /* 减小内边距 */
+            white-space: nowrap;
+        }
+
+        .btn-text:hover {
+            color: #ffffff;
+            text-shadow: 0 0 8px rgba(77, 171, 247, 0.8);
+            transform: translateY(-1px);
+        }
+
+        .btn-icon {
+            margin-right: 5px;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(13, 32, 64, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(77, 171, 247, 0.5);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(77, 171, 247, 0.8);
+        }
+
+        /* 添加iconfont基础样式确保图标正确显示 */
+        .iconfont {
+            font-family: "iconfont" !important;
+            font-size: 16px;
+            font-style: normal;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        /* 添加备用图标样式 */
+        .icon-fallback {
+            margin-right: 5px;
+            display: none; /* 默认隐藏，当iconfont加载失败时显示 */
+        }
+        
+        /* 添加图标状态类，确保用于检测的样式 */
+        .iconfont:empty::before {
+            content: "";
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+        }
+        
+        /* 确保图标容器有足够的宽度 */
+        .btn-text i, .btn-primary i {
+            display: inline-block;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        /* 图标模拟样式 - 无字体时使用 */
+        .icon-simulate {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 5px;
+            position: relative;
+        }
+        
+        /* 通知弹出框样式 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            background: rgba(22, 72, 163, 0.9);
+            color: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            display: none;
+        }
+        
+        .notification.success {
+            background: rgba(33, 150, 83, 0.9);
+        }
+        
+        .notification.error {
+            background: rgba(231, 76, 60, 0.9);
+        }
+        
+        .notification.warning {
+            background: rgba(241, 196, 15, 0.9);
+        }
+        
+        .notification.info {
+            background: rgba(52, 152, 219, 0.9);
+        }
+        
+        /* 模态弹窗样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 11, 48, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .modal-content {
+            width: 500px;
+            background: rgba(6, 27, 130, 0.95);
+            border: 1px solid rgba(50, 145, 198, 0.5);
+            border-radius: 8px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            color: #4dabf7;
+            margin: 0;
+        }
+        
+        .close-modal {
+            color: #4dabf7;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: white;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(50, 145, 198, 0.5);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* 工具提示样式 */
+        #tooltip {
+            position: absolute;
+            background: rgba(6, 27, 130, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(50, 145, 198, 0.5);
+            font-size: 14px;
+            z-index: 10000;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Element UI 图标样式 */
+        [class^="el-icon-"], [class*=" el-icon-"] {
+            font-family: "element-icons" !important;
+            font-style: normal;
+            font-weight: normal;
+            font-variant: normal;
+            text-transform: none;
+            line-height: 1;
+            vertical-align: baseline;
+            display: inline-block;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            margin-right: 5px;
+        }
+        
+        /* 确保Element图标优先显示 */
+        .el-icon-connection:before { content: "\e6e0"; }
+        .el-icon-cpu:before { content: "\e6cb"; }
+        .el-icon-s-operation:before { content: "\e68f"; }
+        .el-icon-copy-document:before { content: "\e744"; }
+        .el-icon-plus:before { content: "\e6d9"; }
+
+        /* 图表容器样式恢复和调整 */
+        .chart-wrapper {
+            flex: 0 0 150px !important;
+            min-width: 150px !important;
+            overflow: hidden;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 150px;
+            margin-top: 5px;
+        }
+
+        /* 按钮组样式恢复 */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        /* 表格行样式恢复和优化 */
+        table tr {
+            background-color: transparent;
+            transition: all 0.3s ease;
+        }
+
+        table tr:not(:last-child) {
+            box-shadow: 0 1px 0 rgba(50, 145, 198, 0.1);
+        }
+
+        table tr:hover td {
+            background-color: rgba(22, 72, 163, 0.15);
+        }
+
+        /* 添加列分隔线 */
+        table th:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 25%;
+            right: 0;
+            height: 50%;
+            width: 1px;
+            background: rgba(50, 145, 198, 0.3);
+        }
+
+        /* 确保所有表格单元格宽度控制 */
+        table th[width], table td[width] {
+            max-width: attr(width px);
+            width: attr(width px);
+        }
+
+        /* 特别控制各个表格的尺寸 */
+        /* 接入展示表格调整 */
+        #ground table th:nth-child(1), 
+        #ground table td:nth-child(1),
+        #satelliteGround table th:nth-child(1), 
+        #satelliteGround table td:nth-child(1),
+        #orbit table th:nth-child(1), 
+        #orbit table td:nth-child(1),
+        #satellite table th:nth-child(1), 
+        #satellite table td:nth-child(1),
+        #institution table th:nth-child(1), 
+        #institution table td:nth-child(1) {
+            width: 120px !important;
+        }
+
+        #ground table th:nth-child(2), 
+        #ground table td:nth-child(2),
+        #satelliteGround table th:nth-child(2), 
+        #satelliteGround table td:nth-child(2),
+        #orbit table th:nth-child(2), 
+        #orbit table td:nth-child(2),
+        #satellite table th:nth-child(2), 
+        #satellite table td:nth-child(2),
+        #institution table th:nth-child(2), 
+        #institution table td:nth-child(2) {
+            width: 80px !important;
+        }
+
+        #ground table th:nth-child(3), 
+        #ground table td:nth-child(3),
+        #satelliteGround table th:nth-child(3), 
+        #satelliteGround table td:nth-child(3),
+        #orbit table th:nth-child(3), 
+        #orbit table td:nth-child(3),
+        #satellite table th:nth-child(3), 
+        #satellite table td:nth-child(3),
+        #institution table th:nth-child(3), 
+        #institution table td:nth-child(3) {
+            width: 80px !important;
+        }
+
+        #ground table th:nth-child(4), 
+        #ground table td:nth-child(4),
+        #satelliteGround table th:nth-child(4), 
+        #satelliteGround table td:nth-child(4),
+        #orbit table th:nth-child(4), 
+        #orbit table td:nth-child(4),
+        #satellite table th:nth-child(4), 
+        #satellite table td:nth-child(4),
+        #institution table th:nth-child(4), 
+        #institution table td:nth-child(4) {
+            width: 100px !important;
+        }
+
+        #ground table th:nth-child(5), 
+        #ground table td:nth-child(5),
+        #satelliteGround table th:nth-child(5), 
+        #satelliteGround table td:nth-child(5),
+        #orbit table th:nth-child(5), 
+        #orbit table td:nth-child(5),
+        #satellite table th:nth-child(5), 
+        #satellite table td:nth-child(5),
+        #institution table th:nth-child(5), 
+        #institution table td:nth-child(5) {
+            width: 120px !important;
+        }
+
+        #ground table th:nth-child(6), 
+        #ground table td:nth-child(6),
+        #satelliteGround table th:nth-child(6), 
+        #satelliteGround table td:nth-child(6),
+        #orbit table th:nth-child(6), 
+        #orbit table td:nth-child(6),
+        #satellite table th:nth-child(6), 
+        #satellite table td:nth-child(6),
+        #institution table th:nth-child(6), 
+        #institution table td:nth-child(6) {
+            width: 80px !important;
+        }
+
+        /* 确保整个文档的元素都在屏幕范围内 */
+        body {
+            overflow-x: hidden !important;
+        }
+
+        /* 防止内容溢出的全局规则 */
+        * {
+            max-width: 100%;
+        }
+
+        /* 确保日志表格最后一列不会导致横向滚动 */
+        .section-container:last-child table th:last-child, 
+        .section-container:last-child table td:last-child {
+            width: auto !important;
+            max-width: none !important;
+        }
+
+        /* 优化表格内的状态指示器显示 */
+        .status-active, .status-inactive, .status-warning,
+        .log-normal, .log-warning, .log-error {
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+
+        /* 中转展示表格特别调整 */
+        .section-container:nth-child(3) .table-container {
+            overflow: auto;
+        }
+
+        /* 确保中转展示部分使用正确的布局 */
+        .section-container:nth-child(3) .flex-layout {
+            display: flex;
+            gap: 15px;
+        }
+
+        .section-container:nth-child(3) .chart-wrapper {
+            flex: 1 !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            width: auto !important;
+            margin-left: 0;
+            padding-left: 0;
+        }
+
+        /* 中转表格特定列宽调整 */
+        .section-container:nth-child(3) table th:nth-child(1),
+        .section-container:nth-child(3) table td:nth-child(1) {
+            width: 140px !important;
+        }
+
+        .section-container:nth-child(3) table th:nth-child(2),
+        .section-container:nth-child(3) table td:nth-child(2) {
+            width: 150px !important;
+        }
+
+        .section-container:nth-child(3) table th:nth-child(3),
+        .section-container:nth-child(3) table td:nth-child(3) {
+            width: 150px !important;
+        }
+
+        .section-container:nth-child(3) table th:nth-child(4),
+        .section-container:nth-child(3) table td:nth-child(4) {
+            width: 180px !important;
+        }
+
+        .section-container:nth-child(3) table th:nth-child(5),
+        .section-container:nth-child(3) table td:nth-child(5) {
+            width: 150px !important;
+        }
+
+        .section-container:nth-child(3) table th:nth-child(6),
+        .section-container:nth-child(3) table td:nth-child(6) {
+            width: 180px !important;
+        }
+
+        .section-container:nth-child(3) table th:nth-child(7),
+        .section-container:nth-child(3) table td:nth-child(7) {
+            width: 162px !important;
+        }
+
+        /* 添加针对日志表的特定样式 */
+        .section-container:last-child table th:nth-child(1),
+        .section-container:last-child table td:nth-child(1) {
+            width: 140px !important;
+        }
+
+        .section-container:last-child table th:nth-child(2),
+        .section-container:last-child table td:nth-child(2),
+        .section-container:last-child table th:nth-child(3),
+        .section-container:last-child table td:nth-child(3) {
+            width: 90px !important;
+        }
+
+        .section-container:last-child table th:nth-child(4),
+        .section-container:last-child table td:nth-child(4) {
+            width: 120px !important;
+        }
+
+        /* 日志内容列宽度自适应 */
+        .section-container:last-child table th:nth-child(5),
+        .section-container:last-child table td:nth-child(5) {
+            min-width: 150px;
+            width: auto !important;
+        }
+
+        /* 修复tab切换区域可能的溢出问题 */
+        .tab-header {
+            display: flex;
+            flex-wrap: wrap;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        /* 控制所有表格单元格内容不超过分配的宽度 */
+        th, td {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 修改表格和图表布局为各占50% */
+        .tab-pane .flex-layout {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* 接入展示部分的表格和图表宽度调整 */
+        .tab-pane .table-container {
+            flex: 0 0 49% !important;
+            width: 49% !important;
+            max-width: 49% !important;
+        }
+
+        .tab-pane .chart-wrapper {
+            flex: 0 0 49% !important;
+            width: 49% !important;
+            min-width: 49% !important;
+            max-width: 49% !important;
+        }
+
+        /* 调整图表容器高度以匹配表格 */
+        .chart-container {
+            width: 100%;
+            height: 100%;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 覆盖之前的图表容器样式 */
+        .chart-wrapper {
+            flex: 0 0 49% !important;
+            min-width: 49% !important;
+            max-width: 49% !important;
+            overflow: hidden;
+        }
+
+        /* 确保中转展示部分仍然使用之前的样式 */
+        .section-container:nth-child(3) .table-container {
+            flex: 1 !important;
+            max-width: calc(100% - 160px) !important;
+        }
+
+        .section-container:nth-child(3) .chart-wrapper {
+            flex: 0 0 150px !important;
+            min-width: 150px !important;
+            max-width: 150px !important;
+        }
+
+        /* 确保只有接入展示部分的表格和图表各占50% */
+        .section-container:first-child .tab-pane .flex-layout {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* 接入展示部分的表格宽度调整 */
+        .section-container:first-child .tab-pane .table-container {
+            flex: 0 0 49% !important;
+            width: 49% !important;
+            max-width: 49% !important;
+        }
+
+        /* 接入展示部分的图表宽度调整 */
+        .section-container:first-child .tab-pane .chart-wrapper {
+            flex: 0 0 49% !important;
+            width: 49% !important;
+            min-width: 49% !important;
+            max-width: 49% !important;
+        }
+
+        /* 调整接入展示部分图表容器高度 */
+        .section-container:first-child .chart-container {
+            width: 100%;
+            height: 100%;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 确保中转展示部分使用原来的布局 */
+        .section-container:nth-child(3) .flex-layout {
+            display: flex;
+        }
+
+        .section-container:nth-child(3) .table-container {
+            flex: 1 !important;
+            max-width: calc(100% - 160px) !important;
+            width: auto !important;
+        }
+
+        .section-container:nth-child(3) .chart-wrapper {
+            flex: 0 0 150px !important;
+            min-width: 150px !important;
+            max-width: 150px !important;
+            width: 150px !important;
+        }
+
+        /* 修正接入展示后的图表样式 */
+        .section-container:nth-child(1) #accessChart,
+        .section-container:nth-child(1) #satelliteGroundChart,
+        .section-container:nth-child(1) #orbitChart,
+        .section-container:nth-child(1) #satelliteChart,
+        .section-container:nth-child(1) #institutionChart {
+            width: 100% !important;
+            height: 150px !important;
+        }
+
+        /* 确保图表在50%宽度下正确渲染 */
+        .chart-container {
+            min-height: 150px;
+        }
+
+        /* 调整表格的高度适应容器 */
+        .section-container:first-child .tab-pane .table-container {
+            max-height: 100%;
+            overflow: auto;
+        }
+
+        .flex-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 调整表格和图表各占50%宽度 */
+        .tab-pane .flex-layout .table-container {
+            flex: 0 0 50% !important;
+            width: 50% !important;
+            max-width: 50% !important;
+            overflow: auto;
+        }
+
+        .tab-pane .flex-layout .chart-wrapper {
+            flex: 0 0 50% !important;
+            width: 50% !important;
+            min-width: 50% !important;
+            max-width: 50% !important;
+        }
+        
+        /* 确保图表在新宽度下正确渲染 */
+        .chart-container {
+            min-height: 150px;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 图表标题样式 */
+        .chart-title {
+            font-size: 14px;
+            color: #e0e0e0;
+            margin-bottom: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <div class="top-nav">
+            <div class="system-title">
+                <i class="icon-fallback fas fa-satellite-dish" style="display:none;"></i>
+                数据接入
+            </div>
+            <div class="user-info">
+                <span><i class="el-icon-s-tools" style="display:none;"></i> 管理员</span>
+                <button class="logout-btn"><i class="icon-fallback fas fa-sign-out-alt" style="display:none;"></i> 退出</button>
+            </div>
+        </div>
+        
+        <div class="main-wrapper">
+            <!-- 左侧菜单栏 -->
+            <div class="sidebar">
+                <div class="menu-title"><i class="icon-fallback fas fa-database" style="display:none;"></i> 数据接入</div>
+                <div class="menu-item"><i class="icon-fallback fas fa-cog" style="display:none;"></i> 数据接入配置</div>
+                <div class="menu-item active"><i class="icon-fallback fas fa-chart-line" style="display:none;"></i> 数据接入状态</div>
+            </div>
+
+            <!-- 主体内容区 -->
+            <div class="main-content">
+                <div class="data-container">
+                    <!-- 接入展示 -->
+                    <div class="section-container" style="flex: 1.2;">
+                        <div class="section-title">
+                            <i class="el-icon-connection"></i>
+                            <span>接入展示</span>
+                        </div>
+                        <div class="tabs">
+                            <div class="tab-header">
+                                <div class="tab-item active" data-tab="ground">地基地面基准站数据</div>
+                                <div class="tab-item" data-tab="satelliteGround">星基地面监测站数据</div>
+                                <div class="tab-item" data-tab="orbit">低轨导航站数据</div>
+                                <div class="tab-item" data-tab="satellite">星载接收机数据</div>
+                                <div class="tab-item" data-tab="institution">机构站网数据</div>
+                            </div>
+                            <div class="tab-content">
+                                <!-- 地基地面基准站数据标签页 -->
+                                <div class="tab-pane active" id="ground">
+                                    <div class="flex-layout">
+                                        <div class="table-container">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th width="150">数据类型</th>
+                                                        <th width="120">连接状态</th>
+                                                        <th width="120">接入状态</th>
+                                                        <th>传输协议</th>
+                                                        <th width="180">接入时间</th>
+                                                        <th width="120">操作</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>实时观测数据</td>
+                                                        <td><span class="status-active">已连接</span></td>
+                                                        <td><span class="status-active">正常</span></td>
+                                                        <td>TCP/IP</td>
+                                                        <td>2025-03-15 08:30:22</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>非实时观测数据</td>
+                                                        <td><span class="status-active">已连接</span></td>
+                                                        <td><span class="status-warning">警告</span></td>
+                                                        <td>FTP</td>
+                                                        <td>2025-03-15 09:15:43</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>气象数据</td>
+                                                        <td><span class="status-active">已连接</span></td>
+                                                        <td><span class="status-active">正常</span></td>
+                                                        <td>HTTP/HTTPS</td>
+                                                        <td>2025-03-15 10:22:18</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button></td>
+                                                    </tr>
+                                                     <tr>
+                                                        <td>高精度产品数据</td>
+                                                        <td><span class="status-inactive">已断开</span></td>
+                                                        <td><span class="status-inactive">停止</span></td>
+                                                        <td>NTRIP</td>
+                                                        <td>2025-03-15 10:22:18</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 启动</button></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="chart-wrapper">
+                                            <div id="accessChart" class="chart-container" style="width:100%; height:150px; background:none; display:flex; justify-content:center; align-items:center; color:#fff; border:1px dashed #4dabf7;">
+                                                <div>图表区域 - 可放置数据接入图</div>
+                                            </div>
+                                         <!-- <div id="accessChart" class="chart-container"></div> -->
+                            
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 星基地面基准站数据标签页 -->
+                                <div class="tab-pane" id="satelliteGround">
+                                    <div class="flex-layout">
+                                        <div class="table-container">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th width="150">数据类型</th>
+                                                        <th width="120">连接状态</th>
+                                                        <th width="120">接入状态</th>
+                                                        <th>传输协议</th>
+                                                        <th width="180">接入时间</th>
+                                                        <th width="120">操作</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>实时观测数据</td>
+                                                        <td><span class="status-active">已连接</span></td>
+                                                        <td><span class="status-active">正常</span></td>
+                                                        <td>TCP/IP</td>
+                                                        <td>2025-03-15 08:45:12</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>非实时观测数据</td>
+                                                        <td><span class="status-inactive">已断开</span></td>
+                                                        <td><span class="status-inactive">停止</span></td>
+                                                        <td>FTP</td>
+                                                        <td>2025-03-14 17:30:55</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-play" style="display:none;"></i> 启动</button></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>气象数据</td>
+                                                        <td><span class="status-active">已连接</span></td>
+                                                        <td><span class="status-active">正常</span></td>
+                                                        <td>HTTP/HTTPS</td>
+                                                        <td>2025-03-15 11:08:29</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button></td>
+                                                    </tr>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="chart-wrapper">
+                                            <div id="satelliteGroundChart" class="chart-container" style="width:100%; height:150px; background:#061B82; display:flex; justify-content:center; align-items:center; color:#fff; border:1px dashed #4dabf7;">
+                                                <div>图表区域 - 可放置星基数据图</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 地轨导航站数据标签页 -->
+                                <div class="tab-pane" id="orbit">
+                                    <div class="flex-layout">
+                                        <div class="table-container">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th width="150">数据类型</th>
+                                                        <th width="120">连接状态</th>
+                                                        <th width="120">接入状态</th>
+                                                        <th>传输协议</th>
+                                                        <th width="180">接入时间</th>
+                                                        <th width="120">操作</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>实时观测数据</td>
+                                                        <td><span class="status-active">已连接</span></td>
+                                                        <td><span class="status-warning">警告</span></td>
+                                                        <td>UDP</td>
+                                                        <td>2025-03-15 09:32:41</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>高精度产品数据</td>
+                                                        <td><span class="status-active">已连接</span></td>
+                                                        <td><span class="status-active">正常</span></td>
+                                                        <td>NTRIP</td>
+                                                        <td>2025-03-15 10:45:13</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="chart-wrapper">
+                                            <div id="orbitChart" class="chart-container" style="width:100%; height:150px; background:#061B82; display:flex; justify-content:center; align-items:center; color:#fff; border:1px dashed #4dabf7;">
+                                                <div>图表区域 - 可放置地轨导航图</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 星载接收机数据标签页 -->
+                                <div class="tab-pane" id="satellite">
+                                    <div class="flex-layout">
+                                        <div class="table-container">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th width="150">数据类型</th>
+                                                        <th width="120">连接状态</th>
+                                                        <th width="120">接入状态</th>
+                                                        <th>传输协议</th>
+                                                        <th width="180">接入时间</th>
+                                                        <th width="120">操作</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>实时观测数据</td>
+                                                        <td><span class="status-active">已连接</span></td>
+                                                        <td><span class="status-active">正常</span></td>
+                                                        <td>TCP/IP</td>
+                                                        <td>2025-03-15 08:50:33</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>非实时观测数据</td>
+                                                        <td><span class="status-active">已连接</span></td>
+                                                        <td><span class="status-active">正常</span></td>
+                                                        <td>FTP</td>
+                                                        <td>2025-03-15 09:25:17</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="chart-wrapper">
+                                            <div id="satelliteChart" class="chart-container" style="width:100%; height:150px; background:#061B82; display:flex; justify-content:center; align-items:center; color:#fff; border:1px dashed #4dabf7;">
+                                                <div>图表区域 - 可放置星载接收机图</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 机构站网数据标签页 -->
+                                <div class="tab-pane" id="institution">
+                                    <div class="flex-layout">
+                                        <div class="table-container">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th width="150">数据类型</th>
+                                                        <th width="120">连接状态</th>
+                                                        <th width="120">接入状态</th>
+                                                        <th>传输协议</th>
+                                                        <th width="180">接入时间</th>
+                                                        <th width="120">操作</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>实时观测数据</td>
+                                                        <td><span class="status-active">已连接</span></td>
+                                                        <td><span class="status-active">正常</span></td>
+                                                        <td>TCP/IP</td>
+                                                        <td>2025-03-15 08:35:42</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>气象数据</td>
+                                                        <td><span class="status-inactive">已断开</span></td>
+                                                        <td><span class="status-inactive">停止</span></td>
+                                                        <td>HTTP/HTTPS</td>
+                                                        <td>2025-03-14 16:20:38</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-play" style="display:none;"></i> 启动</button></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>高精度产品数据</td>
+                                                        <td><span class="status-active">已连接</span></td>
+                                                        <td><span class="status-warning">警告</span></td>
+                                                        <td>NTRIP</td>
+                                                        <td>2025-03-15 11:15:24</td>
+                                                        <td><button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="chart-wrapper">
+                                            <div id="institutionChart" class="chart-container" style="width:100%; height:150px; background:#061B82; display:flex; justify-content:center; align-items:center; color:#fff; border:1px dashed #4dabf7;">
+                                                <div>图表区域 - 可放置机构站网图</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 数据预处理展示 -->
+                    <div class="section-container" style="flex: 0.4;">
+                        <div class="section-title">
+                            <i class="el-icon-cpu"></i>
+                            <span>数据解析配置</span>
+                        </div>
+                        <div class="button-group">
+                            <button class="btn btn-primary"><i class="el-icon-s-operation"></i> RTCM数据解析配置</button>
+                            <button class="btn btn-primary"><i class="el-icon-s-operation"></i> RINEX数据解析配置</button>
+                            <button class="btn btn-primary"><i class="el-icon-s-operation"></i> BINEX数据解析配置</button>
+                            <button class="btn btn-primary"><i class="el-icon-s-operation"></i> 星载GNSS接收机数据解析配置</button>
+                            <button class="btn btn-primary"><i class="el-icon-s-operation"></i> NetCDF数据解析配置</button>
+                        </div>
+                    </div>
+
+                    <!-- 中转展示 -->
+                    <div class="section-container" style="flex: 1;">
+                        <div class="section-title">
+                            <i class="el-icon-copy-document"></i>
+                            <span>中转展示</span>
+                            <button class="btn btn-primary" style="margin-left: auto;"><i class="el-icon-plus"></i> 新增中转</button>
+                        </div>
+                        <div class="flex-layout">
+                            <div class="table-container" style="flex: 0 0 1112px !important; width: 1112px !important; min-width: 1112px !important; max-width: 1112px !important;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th width="140">数据类型</th>
+                                            <th width="150">连接状态</th>
+                                            <th width="150">中转状态</th>
+                                            <th width="180">中转目标</th>
+                                            <th width="150">通信协议</th>
+                                            <th width="180">组播地址</th>
+                                            <th width="162">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>跨网</td>
+                                            <td><span class="status-active">已连接</span></td>
+                                            <td><span class="status-active">正常</span></td>
+                                            <td>涉密数据中心</td>
+                                            <td>TCP/IP</td>
+                                            <td>239.255.0.1:5000</td>
+                                            <td>
+                                                <button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button>
+                                                <button class="btn-text"><i class="icon-fallback fas fa-trash" style="display:none;"></i> 删除</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>定时</td>
+                                            <td><span class="status-inactive">已断开</span></td>
+                                            <td><span class="status-inactive">停止</span></td>
+                                            <td>商密数据中心</td>
+                                            <td>UDP</td>
+                                            <td>239.255.0.2:5001</td>
+                                            <td>
+                                                <button class="btn-text"><i class="icon-fallback fas fa-play" style="display:none;"></i> 启动</button>
+                                                <button class="btn-text"><i class="icon-fallback fas fa-trash" style="display:none;"></i> 删除</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>跨网</td>
+                                            <td><span class="status-active">已连接</span></td>
+                                            <td><span class="status-warning">警告</span></td>
+                                            <td>商密数据中心</td>
+                                            <td>FTP</td>
+                                            <td>239.255.0.3:5002</td>
+                                            <td>
+                                                <button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button>
+                                                <button class="btn-text"><i class="icon-fallback fas fa-trash" style="display:none;"></i> 删除</button>
+                                            </td>
+                                        </tr>
+                                         <tr>
+                                            <td>跨网</td>
+                                            <td><span class="status-active">已连接</span></td>
+                                            <td><span class="status-active">正常</span></td>
+                                            <td>涉密数据中心</td>
+                                            <td>TCP/IP</td>
+                                            <td>239.255.0.1:5000</td>
+                                            <td>
+                                                <button class="btn-text"><i class="icon-fallback fas fa-pause" style="display:none;"></i> 暂停</button>
+                                                <button class="btn-text"><i class="icon-fallback fas fa-trash" style="display:none;"></i> 删除</button>
+                                            </td>
+                                        </tr>
+                                   
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="chart-wrapper" style="flex: 1 !important; min-width: 0 !important; max-width: none !important; width: auto !important; padding-left: 15px;">
+                                <!-- <div class="chart-title" style="margin-top: 0;">中转目标接收数据量</div> -->
+                                <div id="transferTargetChart" class="chart-container" style="width:100%; height:150px; background:#061B82; display:flex; justify-content:center; align-items:center; color:#fff; border:1px dashed #4dabf7;">
+                                    <div>饼图区域 - 中转目标接收数据量（涉密数据中心/商密数据中心）</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 日志展示 -->
+                    <div class="section-container" style="flex: 0.8;">
+                        <div class="section-title">
+                            <i class="el-icon-document"></i>
+                            <span>日志展示</span>
+                            <button class="btn btn-primary" style="margin-left: auto;"><i class="el-icon-refresh"></i> 刷新</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th width="180">记录时间</th>
+                                    <th width="120">类型</th>
+                                    <th width="120">功能类型</th>
+                                    <th width="180">数据类型</th>
+                                    <th>日志内容</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2025-03-15 11:30:45</td>
+                                    <td><span class="log-normal">正常</span></td>
+                                    <td>接入</td>
+                                    <td>实时观测数据</td>
+                                    <td>成功接入地基地面基准站数据</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-03-15 11:28:32</td>
+                                    <td><span class="log-warning">告警</span></td>
+                                    <td>中转</td>
+                                    <td>跨网</td>
+                                    <td>中转数据延迟超过阈值</td>
+                                </tr>
+                                <tr>
+                                    <td>2025-03-15 11:25:18</td>
+                                    <td><span class="log-normal">正常</span></td>
+                                    <td>接入</td>
+                                    <td>气象数据</td>
+                                    <td>成功接入星基地面监测站气象数据</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 交互功能 -->
+    <script>
+        // 页面加载完成后执行初始化操作
+        document.addEventListener('DOMContentLoaded', function() {
+            // 处理样式中错误放置的JavaScript代码
+            fixCssStyleError();
+            
+            // 初始化标签页功能
+            initTabs();
+            
+            // 从DOM中移除可能存在的handleResize函数
+            removeHandleResizeFromCSS();
+            
+            // 初始化图表
+            initAllCharts();
+            
+            // 当窗口大小变化时，调整图表尺寸
+            window.addEventListener('resize', handleResize);
+            
+            // 初始化图表交互功能
+            initChartInteractions();
+            
+            // 模拟实时数据更新
+            simulateRealTimeUpdates();
+            
+            // 检查Element图标
+            checkElementIcons();
+            
+            // 加载替代图标字体
+            loadAlternativeIconFont();
+        });
+        
+        // 修复CSS样式错误：移除样式标签中的JavaScript函数
+        function fixCssStyleError() {
+            // 在这里不做实际修改，因为我们已经用占位符替换了图表
+            console.log('修复CSS中的JavaScript代码');
+        }
+        
+        // 从DOM中移除handleResize函数（如果它被错误放在样式中）
+        function removeHandleResizeFromCSS() {
+            // 这个函数仅作为警告，实际的修复需要手动编辑文件
+            console.warn('CSS中发现JavaScript代码，这会导致样式无法正确应用。请手动编辑文件，移除CSS中的handleResize函数。');
+        }
+        
+        // 替代图表初始化函数，使用静态内容
+        function initAllCharts() {
+            // 我们不再使用echarts初始化图表，而是使用静态占位符
+            const chartContainers = document.querySelectorAll('.chart-container');
+            chartContainers.forEach(container => {
+                // 确保图表容器有正确的样式和尺寸
+                container.style.width = '100%';
+                container.style.height = '150px';
+                container.style.backgroundColor = '#061B82';
+                container.style.border = '1px dashed #4dabf7';
+                
+                // 如果容器内没有内容，添加提示文字
+                if (container.children.length === 0) {
+                    const placeholder = document.createElement('div');
+                    placeholder.textContent = '图表区域 - 请放置图片';
+                    placeholder.style.color = '#fff';
+                    placeholder.style.display = 'flex';
+                    placeholder.style.justifyContent = 'center';
+                    placeholder.style.alignItems = 'center';
+                    placeholder.style.height = '100%';
+                    container.appendChild(placeholder);
+                }
+            });
+            
+            // 如果存在ECharts库，则初始化饼图
+            if (window.echarts) {
+                // 初始化中转目标接收数据量饼图
+                try {
+                    initTransferTargetChart();
+                } catch (e) {
+                    console.error('初始化中转目标接收数据量饼图失败:', e);
+                }
+            }
+        }
+        
+        // 处理窗口大小变化，调整图表尺寸
+        function handleResize() {
+            const chartContainers = document.querySelectorAll('.chart-container');
+            chartContainers.forEach(container => {
+                // 检查是否有echarts实例
+                if (window.echarts && echarts.getInstanceByDom) {
+                    const chart = echarts.getInstanceByDom(container);
+                    if (chart) {
+                        chart.resize();
+                    }
+                }
+            });
+        }
+        
+        // 初始化图表交互功能
+        function initChartInteractions() {
+            // 为图表容器添加点击事件
+            const chartContainers = document.querySelectorAll('.chart-container');
+            chartContainers.forEach(container => {
+                container.addEventListener('click', function() {
+                    alert('您点击了图表区域，此处可以放置图片替代图表');
+                });
+            });
+        }
+        
+        // 标签页切换功能
+        function initTabs() {
+            const tabItems = document.querySelectorAll('.tab-item');
+            
+            tabItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除所有标签页的active类
+                    tabItems.forEach(tab => tab.classList.remove('active'));
+                    
+                    // 移除所有内容区的active类
+                    const tabPanes = document.querySelectorAll('.tab-pane');
+                    tabPanes.forEach(pane => pane.classList.remove('active'));
+                    
+                    // 为当前点击的标签添加active类
+                    this.classList.add('active');
+                    
+                    // 显示对应的内容区
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // 处理对应标签页的图表
+                    refreshCharts(tabId);
+                });
+            });
+        }
+        
+        // 处理窗口大小变化
+        function handleResize() {
+            const chartContainers = document.querySelectorAll('.chart-container');
+            chartContainers.forEach(container => {
+                const chart = echarts.getInstanceByDom(container);
+                if (chart) {
+                    chart.resize();
+                }
+            });
+        }
+        
+        // 根据当前活动标签页刷新图表
+        function refreshCharts(tabId) {
+            switch(tabId) {
+                case 'ground':
+                    initAccessChart();
+                    break;
+                case 'satelliteGround':
+                    initSatelliteGroundChart();
+                    break;
+                case 'orbit':
+                    initOrbitChart();
+                    break;
+                case 'satellite':
+                    initSatelliteChart();
+                    break;
+                case 'institution':
+                    initInstitutionChart();
+                    break;
+            }
+            
+            // 始终刷新中转目标图表，因为它不在标签页内
+            initTransferTargetChart();
+        }
+        
+        // 初始化接入图表
+        function initAccessChart() {
+            const chartContainer = document.getElementById('accessChart');
+            if (!chartContainer) return;
+            
+            const chart = echarts.init(chartContainer);
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['实时观测', '非实时观测', '气象数据', '高精度产品'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4dabf7'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '数据量(MB)',
+                    nameTextStyle: {
+                        color: '#e0e0e0'
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4dabf7'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#1a3a6a'
+                        }
+                    }
+                },
+                series: [{
+                    name: '接入量',
+                    type: 'bar',
+                    data: [320, 180, 120, 80],
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: '#83bff6'},
+                            {offset: 0.5, color: '#188df0'},
+                            {offset: 1, color: '#0077e6'}
+                        ])
+                    }
+                }]
+            });
+        }
+        
+        // 初始化星基地面基准站图表
+        function initSatelliteGroundChart() {
+            const chartContainer = document.getElementById('satelliteGroundChart');
+            if (!chartContainer) return;
+            
+            const chart = echarts.init(chartContainer);
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['实时观测', '非实时观测', '气象数据'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4dabf7'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '数据量(MB)',
+                    nameTextStyle: {
+                        color: '#e0e0e0'
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4dabf7'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#1a3a6a'
+                        }
+                    }
+                },
+                series: [{
+                    name: '接入量',
+                    type: 'bar',
+                    data: [280, 150, 90],
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: '#83bff6'},
+                            {offset: 0.5, color: '#188df0'},
+                            {offset: 1, color: '#0077e6'}
+                        ])
+                    }
+                }]
+            });
+        }
+        
+        // 其他图表初始化函数（为简化代码，使用相似的配置）
+        function initOrbitChart() {
+            const chartContainer = document.getElementById('orbitChart');
+            if (!chartContainer) return;
+            
+            const chart = echarts.init(chartContainer);
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['实时观测', '高精度产品'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4dabf7'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '数据量(MB)',
+                    nameTextStyle: {
+                        color: '#e0e0e0'
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4dabf7'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#1a3a6a'
+                        }
+                    }
+                },
+                series: [{
+                    name: '接入量',
+                    type: 'bar',
+                    data: [200, 150],
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: '#83bff6'},
+                            {offset: 0.5, color: '#188df0'},
+                            {offset: 1, color: '#0077e6'}
+                        ])
+                    }
+                }]
+            });
+        }
+        
+        function initSatelliteChart() {
+            const chartContainer = document.getElementById('satelliteChart');
+            if (!chartContainer) return;
+            
+            const chart = echarts.init(chartContainer);
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['实时观测', '非实时观测'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4dabf7'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '数据量(MB)',
+                    nameTextStyle: {
+                        color: '#e0e0e0'
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4dabf7'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#1a3a6a'
+                        }
+                    }
+                },
+                series: [{
+                    name: '接入量',
+                    type: 'bar',
+                    data: [210, 170],
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: '#83bff6'},
+                            {offset: 0.5, color: '#188df0'},
+                            {offset: 1, color: '#0077e6'}
+                        ])
+                    }
+                }]
+            });
+        }
+        
+        function initInstitutionChart() {
+            const chartContainer = document.getElementById('institutionChart');
+            if (!chartContainer) return;
+            
+            const chart = echarts.init(chartContainer);
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['实时观测', '气象数据', '高精度产品'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4dabf7'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '数据量(MB)',
+                    nameTextStyle: {
+                        color: '#e0e0e0'
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4dabf7'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#1a3a6a'
+                        }
+                    }
+                },
+                series: [{
+                    name: '接入量',
+                    type: 'bar',
+                    data: [250, 120, 180],
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: '#83bff6'},
+                            {offset: 0.5, color: '#188df0'},
+                            {offset: 1, color: '#0077e6'}
+                        ])
+                    }
+                }]
+            });
+        }
+        
+        function initTransferChart() {
+            const chartContainer = document.getElementById('transferChart');
+            if (!chartContainer) return;
+            
+            const chart = echarts.init(chartContainer);
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['跨网', '定时'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4dabf7'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '数据量(MB)',
+                    nameTextStyle: {
+                        color: '#e0e0e0'
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4dabf7'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#e0e0e0'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#1a3a6a'
+                        }
+                    }
+                },
+                series: [{
+                    name: '中转量',
+                    type: 'bar',
+                    data: [300, 150],
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: '#83bff6'},
+                            {offset: 0.5, color: '#188df0'},
+                            {offset: 1, color: '#0077e6'}
+                        ])
+                    }
+                }]
+            });
+        }
+        
+        // 表格交互功能
+        function initTableInteractions() {
+            // 表格行悬停效果
+            const tableRows = document.querySelectorAll('table tbody tr');
+            tableRows.forEach(row => {
+                row.addEventListener('mouseover', function() {
+                    this.classList.add('hover');
+                });
+                
+                row.addEventListener('mouseout', function() {
+                    this.classList.remove('hover');
+                });
+                
+                // 点击行选中
+                row.addEventListener('click', function(e) {
+                    // 如果点击的是按钮，不执行选中行操作
+                    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                        return;
+                    }
+                    
+                    // 切换选中状态
+                    tableRows.forEach(r => r.classList.remove('selected'));
+                    this.classList.add('selected');
+                    
+                    // 显示操作面板
+                    showRowDetails(this);
+                });
+            });
+            
+            // 表格排序功能
+            const sortableHeaders = document.querySelectorAll('table th.sortable');
+            sortableHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const table = this.closest('table');
+                    const thIndex = Array.from(this.parentNode.children).indexOf(this);
+                    const isAsc = this.classList.contains('asc');
+                    
+                    // 移除所有表头的排序标记
+                    sortableHeaders.forEach(h => {
+                        h.classList.remove('asc', 'desc');
+                    });
+                    
+                    // 添加新的排序标记
+                    this.classList.add(isAsc ? 'desc' : 'asc');
+                    
+                    // 执行排序
+                    sortTable(table, thIndex, !isAsc);
+                });
+            });
+        }
+        
+        // 排序表格
+        function sortTable(table, colIndex, asc) {
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // 根据指定列排序
+            rows.sort((a, b) => {
+                const aValue = a.cells[colIndex].textContent.trim();
+                const bValue = b.cells[colIndex].textContent.trim();
+                
+                // 尝试数字排序，如果失败则按字符串排序
+                const aNum = Number(aValue);
+                const bNum = Number(bValue);
+                
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return asc ? aNum - bNum : bNum - aNum;
+                } else {
+                    return asc ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                }
+            });
+            
+            // 重新添加排序后的行
+            rows.forEach(row => tbody.appendChild(row));
+        }
+        
+        // 显示行详情
+        function showRowDetails(row) {
+            const detailsPanel = document.querySelector('.row-details-panel');
+            if (detailsPanel) {
+                // 获取行数据
+                const cells = row.querySelectorAll('td');
+                let detailsHTML = '<h3>详细信息</h3><div class="details-content">';
+                
+                cells.forEach((cell, index) => {
+                    const headerText = row.closest('table').querySelectorAll('th')[index].textContent;
+                    detailsHTML += `<div class="detail-item">
+                        <span class="detail-label">${headerText}:</span>
+                        <span class="detail-value">${cell.textContent}</span>
+                    </div>`;
+                });
+                
+                detailsHTML += '</div><div class="action-buttons">';
+                detailsHTML += '<button class="btn-edit">编辑</button>';
+                detailsHTML += '<button class="btn-delete">删除</button>';
+                detailsHTML += '<button class="btn-details">更多信息</button>';
+                detailsHTML += '</div>';
+                
+                detailsPanel.innerHTML = detailsHTML;
+                detailsPanel.style.display = 'block';
+                
+                // 添加按钮事件
+                const editBtn = detailsPanel.querySelector('.btn-edit');
+                const deleteBtn = detailsPanel.querySelector('.btn-delete');
+                const detailsBtn = detailsPanel.querySelector('.btn-details');
+                
+                if (editBtn) editBtn.addEventListener('click', () => handleEditRow(row));
+                if (deleteBtn) deleteBtn.addEventListener('click', () => handleDeleteRow(row));
+                if (detailsBtn) detailsBtn.addEventListener('click', () => handleViewDetails(row));
+            }
+        }
+        
+        // 行操作处理函数
+        function handleEditRow(row) {
+            showModal('编辑数据', `准备编辑 ID: ${row.cells[0].textContent} 的数据`);
+        }
+        
+        function handleDeleteRow(row) {
+            showModal('确认删除', `确定要删除 ID: ${row.cells[0].textContent} 的数据吗？`, () => {
+                row.remove();
+                document.querySelector('.row-details-panel').style.display = 'none';
+                showNotification('数据已删除', 'success');
+            });
+        }
+        
+        function handleViewDetails(row) {
+            showModal('详细信息', `查看 ID: ${row.cells[0].textContent} 的详细信息`);
+        }
+        
+        // 按钮交互
+        function initButtonActions() {
+            // 操作按钮
+            const actionButtons = document.querySelectorAll('.action-btn');
+            actionButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const action = this.getAttribute('data-action');
+                    handleButtonAction(action, this);
+                });
+            });
+            
+            // 筛选按钮
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const filterType = this.getAttribute('data-filter');
+                    filterTableData(filterType);
+                });
+            });
+        }
+        
+        // 处理按钮操作
+        function handleButtonAction(action, button) {
+            switch(action) {
+                case 'add':
+                    showModal('添加数据', '请输入新数据的详细信息');
+                    break;
+                case 'import':
+                    showModal('导入数据', '请选择要导入的数据文件');
+                    break;
+                case 'export':
+                    showNotification('数据已导出', 'success');
+                    break;
+                case 'refresh':
+                    refreshTableData();
+                    showNotification('数据已刷新', 'info');
+                    break;
+                case 'filter':
+                    const filterMenu = document.querySelector('.filter-menu');
+                    if (filterMenu) {
+                        filterMenu.style.display = filterMenu.style.display === 'block' ? 'none' : 'block';
+                        // 定位过滤菜单
+                        positionFilterMenu(filterMenu, button);
+                    }
+                    break;
+            }
+        }
+        
+        // 定位过滤菜单
+        function positionFilterMenu(menu, button) {
+            const rect = button.getBoundingClientRect();
+            menu.style.top = rect.bottom + 'px';
+            menu.style.left = rect.left + 'px';
+        }
+        
+        // 状态指示器
+        function initStatusIndicators() {
+            const statusElements = document.querySelectorAll('.status-indicator');
+            statusElements.forEach(element => {
+                const status = element.getAttribute('data-status');
+                element.classList.add(status);
+                
+                // 添加状态提示
+                element.setAttribute('title', getStatusText(status));
+                
+                // 添加工具提示功能
+                element.addEventListener('mouseover', function(e) {
+                    showTooltip(e, getStatusText(status));
+                });
+                
+                element.addEventListener('mouseout', function() {
+                    hideTooltip();
+                });
+            });
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            switch(status) {
+                case 'success':
+                    return '正常';
+                case 'warning':
+                    return '警告';
+                case 'error':
+                    return '错误';
+                case 'inactive':
+                    return '未激活';
+                default:
+                    return '未知状态';
+            }
+        }
+        
+        // 工具提示
+        function showTooltip(e, text) {
+            let tooltip = document.getElementById('tooltip');
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.id = 'tooltip';
+                document.body.appendChild(tooltip);
+            }
+            
+            tooltip.textContent = text;
+            tooltip.style.top = (e.pageY + 10) + 'px';
+            tooltip.style.left = (e.pageX + 10) + 'px';
+            tooltip.style.display = 'block';
+        }
+        
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            if (tooltip) {
+                tooltip.style.display = 'none';
+            }
+        }
+        
+        // 搜索功能
+        function setupSearchFunctionality() {
+            const searchInput = document.querySelector('.search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    searchTableData(searchTerm);
+                });
+            }
+        }
+        
+        // 在表格中搜索
+        function searchTableData(term) {
+            const tableRows = document.querySelectorAll('table tbody tr');
+            tableRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        }
+        
+        // 筛选表格数据
+        function filterTableData(filterType) {
+            const tableRows = document.querySelectorAll('table tbody tr');
+            
+            tableRows.forEach(row => {
+                if (filterType === 'all') {
+                    row.style.display = '';
+                    return;
+                }
+                
+                const statusCell = row.querySelector('.status-indicator');
+                if (statusCell) {
+                    const status = statusCell.getAttribute('data-status');
+                    row.style.display = status === filterType ? '' : 'none';
+                }
+            });
+        }
+        
+        // 刷新表格数据
+        function refreshTableData() {
+            // 这里可以添加实际的数据刷新逻辑
+            // 示例中仅添加动画效果
+            const tables = document.querySelectorAll('table');
+            tables.forEach(table => {
+                table.classList.add('refreshing');
+                setTimeout(() => {
+                    table.classList.remove('refreshing');
+                }, 1000);
+            });
+        }
+        
+        // 显示模态窗口
+        function showModal(title, content, confirmCallback) {
+            let modal = document.querySelector('.modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.className = 'modal';
+                document.body.appendChild(modal);
+            }
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>${title}</h3>
+                        <span class="close-modal">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <p>${content}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-cancel">取消</button>
+                        <button class="btn-confirm">确定</button>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+            
+            // 按钮事件
+            const closeBtn = modal.querySelector('.close-modal');
+            const cancelBtn = modal.querySelector('.btn-cancel');
+            const confirmBtn = modal.querySelector('.btn-confirm');
+            
+            const closeModal = () => {
+                modal.style.display = 'none';
+            };
+            
+            closeBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            confirmBtn.addEventListener('click', () => {
+                if (confirmCallback) confirmCallback();
+                closeModal();
+            });
+        }
+        
+        // 显示通知
+        function showNotification(message, type) {
+            let notification = document.querySelector('.notification');
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.className = 'notification';
+                document.body.appendChild(notification);
+            }
+            
+            notification.textContent = message;
+            notification.className = 'notification ' + type;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 模拟实时数据更新
+        function simulateRealTimeUpdates() {
+            setInterval(() => {
+                // 随机选择一个表格
+                const tables = document.querySelectorAll('table');
+                if (tables.length === 0) return;
+                
+                const randomTableIndex = Math.floor(Math.random() * tables.length);
+                const table = tables[randomTableIndex];
+                
+                // 随机选择表格中的一行
+                const rows = table.querySelectorAll('tbody tr');
+                if (rows.length === 0) return;
+                
+                const randomRowIndex = Math.floor(Math.random() * rows.length);
+                const row = rows[randomRowIndex];
+                
+                // 随机选择一种操作
+                const operations = ['update', 'highlight'];
+                const randomOperation = operations[Math.floor(Math.random() * operations.length)];
+                
+                switch (randomOperation) {
+                    case 'update':
+                        // 更新某个单元格的数据
+                        const dataCells = row.querySelectorAll('td:not(.status-cell)');
+                        if (dataCells.length > 0) {
+                            const randomCellIndex = Math.floor(Math.random() * dataCells.length);
+                            const cell = dataCells[randomCellIndex];
+                            
+                            // 如果单元格包含数字，则增加或减少一些
+                            const cellText = cell.textContent;
+                            const cellValue = parseFloat(cellText);
+                            if (!isNaN(cellValue)) {
+                                const change = Math.random() > 0.5 ? 1 : -1;
+                                const newValue = cellValue + change;
+                                cell.textContent = newValue.toFixed(2);
+                                
+                                // 添加更新效果
+                                cell.classList.add('updated');
+                                setTimeout(() => {
+                                    cell.classList.remove('updated');
+                                }, 2000);
+                            }
+                        }
+                        break;
+                        
+                    case 'highlight':
+                        // 高亮显示行
+                        row.classList.add('highlight');
+                        setTimeout(() => {
+                            row.classList.remove('highlight');
+                        }, 2000);
+                        break;
+                }
+            }, 8000); // 每8秒更新一次
+        }
+        
+        // 加载替代图标字体
+        function loadAlternativeIconFont() {
+            console.log('尝试加载替代图标字体...');
+            
+            // 对于Element UI图标，确保优先显示
+            const elementIcons = document.querySelectorAll('[class*="el-icon-"]');
+            elementIcons.forEach(icon => {
+                // 查找同级的其他图标，隐藏它们
+                const siblings = icon.parentNode.querySelectorAll('i:not([class*="el-icon-"])');
+                siblings.forEach(sibling => {
+                    sibling.style.display = 'none';
+                });
+                
+                // 确保Element图标显示
+                icon.style.display = 'inline-block';
+            });
+            
+            // 原有的替代图标加载代码...
+            const alternativeFonts = [
+                '//at.alicdn.com/t/c/font_2277842_jd79z8oqhro.css',
+                '//at.alicdn.com/t/c/font_2277842_6zbv7f1fdsb.css'
+            ];
+            
+            // 尝试加载其他可能的iconfont样式
+            const head = document.head;
+            const link = document.createElement('link');
+            link.type = 'text/css';
+            link.rel = 'stylesheet';
+            link.href = alternativeFonts[0];
+            head.appendChild(link);
+            
+            // 添加内联iconfont样式作为最后的备用方案
+            const style = document.createElement('style');
+            style.textContent = `
+                /* 内联备用iconfont字体 */
+                @font-face {
+                    font-family: "local-iconfont";
+                    src: url('data:application/x-font-woff2;charset=utf-8;base64,d09GMgABAAAAAAO0AAsAAAAACFwAAANlAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHEIGVgCDMgqDaIM0ATYCJAMUCwwABCAFhG0HUhswBxHVm8PIfhzGMck6c2bkTSjPG/sePF/Mj/dO8028DVCSqkk/ygGV0QlEp3N090lW4ZxElXAyQ8iJTzZh//9am9aTUBg9gRPgOeae+334/zfTL6TtbM7a5pJ1URepeQKNoI/qZnugzQVMQDwwbhm9yMME6jUYA25jMYUBhTLsFYgLhokBFMZcKoeQhuqSs7EI3oBFNc10lPYagNfez+MP5IUBiaMMu+3B2NYQOvR5+bdM3H/xKGMCcHg2g11ExgJQiKNS/yGULC6g1Esf15wB1KuXJH2e/ab823L//0MoB6vSqPzDIxFkgKofGCNhS+FDgoTPmwQSPm9MN/zlLRuj+jl4AVgBvAdXgFGh+4akyXq9XqR3FQoJnqaXl5pPg8HgamLikcLjxdBopKSlXYGFMvmOQrHjdKHDpbQkmhKbDWMvU3pxFCrUcgPSpJXr4ojWxK6VkKk0akGJVOBNy81iPCj6wPgaNMYV/cLeOixuKZp5SdGadFjGvR1XTwYnQjM8tqX/ao09RvAi5LGvrYZ/rRXGlLvn8h8NhubK49vCcT8uHl7fBLbV/ce92ctQWzP19Jzt47n9pzk58QXNELwLwdVLlJWbsOsCbcbS07dHc1PB4YahdtIHi9oKWrP7TnO6z8k/H66ccEBuWn9B/P7VJHMttXVKKZWbkm6UUjMunoymUuKCFdnJgwcbvKGl9X6Zf1OXkc1Md1cXc3XK9j5q+87dKJxfcOnFulAK91ZHQutCobV1vNmxY3iY9UPrd96dePrpxB4Ax8i7ff8DAE6kBzcA4F82dQCAl9jNzvs/5fdg8H+lpj/gfyEq4CLW+cuE3PcXJAb+UyQVyiiUkWpmvlW24Wz4L5hDH3XSVlfsdr+lFqKOCYuWCpC06ARZrT7Igi2AtMYmyKptg3rz9s7XaKEXFIqxhjlXAaHVA0jafIWs1acgC/YLpG7/Qq62kKDeiHjGaxSbZReDbjHDUGtoQD/QZ51Jp51MRe9Qmo5w0X5GXUcXZAeOSL9iS3LG2KEee2GDMcWG1RDuoVkMYcVDjFFoG3W9gajKXNhDJ3L6mhZNHQYHN4VhoFaDDNAPyGc6o9w0V5n3/g5JpUNwIYflj9DRIhfO3KxE+qt0ZJx6jqtlW57SwRimMNnAyhDcg8yEYbnlQRijoFk12mOAUCoj10Gncm3L+vWdN9wD6mE3lihR86Q4QcWGlBxbtjOpdDoNAA==') format('woff2');
+                }
+                .local-iconfont {
+                    font-family: "local-iconfont" !important;
+                    font-size: 16px;
+                    font-style: normal;
+                    -webkit-font-smoothing: antialiased;
+                    -moz-osx-font-smoothing: grayscale;
+                    margin-right: 5px;
+                }
+                .local-icon-stop:before {
+                    content: "\\e602";
+                }
+                .local-icon-play:before {
+                    content: "\\e603";
+                }
+                .local-icon-trash:before {
+                    content: "\\e604";
+                }
+                .local-icon-user:before {
+                    content: "\\e605";
+                }
+                .local-icon-refresh:before {
+                    content: "\\e606";
+                }
+            `;
+            head.appendChild(style);
+            
+            // 再次检查并替换不可见图标
+            setTimeout(function() {
+                const iconElements = document.querySelectorAll('.iconfont');
+                
+                iconElements.forEach(function(iconElement) {
+                    // 如果备用图标存在但仍然不可见，使用内联iconfont
+                    const fallbackIcon = iconElement.nextElementSibling;
+                    if (fallbackIcon && fallbackIcon.style.display === 'none') {
+                        const iconCode = iconElement.innerHTML.trim();
+                        let localIconClass = '';
+                        
+                        // 映射iconfont代码到本地图标类
+                        if (iconCode === '&#xe61a;') localIconClass = 'local-icon-stop';
+                        else if (iconCode === '&#xe61e;') localIconClass = 'local-icon-play';
+                        else if (iconCode === '&#xe60f;') localIconClass = 'local-icon-trash';
+                        else if (iconCode === '&#xe619;') localIconClass = 'local-icon-user';
+                        else if (iconCode === '&#xe64e;') localIconClass = 'local-icon-refresh';
+                        
+                        if (localIconClass) {
+                            const localIcon = document.createElement('i');
+                            localIcon.className = 'local-iconfont ' + localIconClass;
+                            iconElement.parentNode.insertBefore(localIcon, iconElement);
+                            iconElement.style.display = 'none';
+                            if (fallbackIcon) fallbackIcon.style.display = 'none';
+                        }
+                    }
+                });
+            }, 1500);
+        }
+
+        // 初始化中转目标接收数据量饼图
+        function initTransferTargetChart() {
+            const chartContainer = document.getElementById('transferTargetChart');
+            if (!chartContainer) return;
+            
+            const chart = echarts.init(chartContainer);
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} MB ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    right: 10,
+                    top: 'center',
+                    textStyle: {
+                        color: '#e0e0e0'
+                    },
+                    data: ['涉密数据中心', '商密数据中心']
+                },
+                series: [{
+                    name: '接收数据量',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '14',
+                            fontWeight: 'bold',
+                            color: '#ffffff'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: [
+                        {value: 250, name: '涉密数据中心', itemStyle: {color: '#4dabf7'}},
+                        {value: 180, name: '商密数据中心', itemStyle: {color: '#0a84ff'}}
+                    ]
+                }]
+            });
+        }
+    </script>
+</body>
+</html> 

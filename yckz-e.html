@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>站网管理系统 - 设备远程控制</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="font_1/iconfont.css">
+    <style>
+        /* 基础样式和变量 */
+        :root {
+            --primary-color: #1648A3;
+            --background-dark: #000B30;
+            --background-light: #061B82;
+            --border-color: rgba(50, 145, 198, 0.3);
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0b9d8;
+            --highlight-color: #4dabf7;
+            --success-color: #67c23a;
+            --warning-color: #e6a23c;
+            --danger-color: #f44336;
+            --card-background: rgba(6, 27, 130, 0.5);
+            --hover-color: rgba(50, 145, 198, 0.3);
+            --menu-active: rgba(50, 145, 198, 0.5);
+            --submenu-active: rgba(50, 145, 198, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        
+        html, body {
+            width: 1920px;
+            height: 1000px;
+            overflow: hidden;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #000B30 0%, #061B82 100%) fixed;
+            color: #e0e0e0;
+            position: relative;
+        }
+        
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(rgba(22, 72, 163, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(22, 72, 163, 0.3) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+        }
+        
+        /* 整体布局 */
+        .wrapper {
+            width: 1920px;
+            height: 1000px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 顶部导航栏 */
+        .header {
+            flex: 0 0 60px;
+            height: 60px;
+            background-color: rgba(6, 27, 130, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.5);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            position: relative;
+            width: 100%;
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 10px rgba(50, 145, 198, 0.7);
+            letter-spacing: 0.1em;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: absolute;
+            right: 20px;
+        }
+        
+        .user-info::before {
+         /*   content: "\f007";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            font-size: 16px;
+            margin-right: 5px;*/
+        }
+        
+        .logout-btn {
+            background-color: rgba(50, 145, 198, 0.3);
+            color: white;
+            border: 1px solid #3291C6;
+            border-radius: 4px;
+            padding: 5px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .logout-btn:hover {
+            background-color: rgba(50, 145, 198, 0.7);
+            box-shadow: 0 0 10px rgba(50, 145, 198, 0.7);
+        }
+        
+        /* 主要内容区域 */
+        .content-wrapper {
+            display: flex;
+            flex: 1;
+            height: calc(1000px - 60px);
+        }
+        
+        /* 左侧菜单栏 */
+        .sidebar {
+            width: 250px;
+            background-color: rgba(6, 27, 130, 0.7);
+            height: 100%;
+            padding: 20px 0;
+            border-right: 1px solid rgba(50, 145, 198, 0.3);
+        }
+        
+        .menu-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #3291C6;
+            padding: 10px 20px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+            margin-bottom: 15px;
+        }
+        
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+        
+        .menu-item:hover {
+            background-color: rgba(50, 145, 198, 0.3);
+            color: white;
+        }
+        
+        .menu-item.active {
+            background-color: var(--menu-active);
+            color: white;
+            border-left: 3px solid #3291C6;
+        }
+        
+        .submenu {
+            padding-left: 20px;
+        }
+        
+        .submenu-item {
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .submenu-item:hover {
+            background-color: rgba(50, 145, 198, 0.3);
+            color: white;
+        }
+        
+        .submenu-item.active {
+            background-color: var(--submenu-active);
+            color: white;
+            border-left: 3px solid #3291C6;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            display: flex;
+            padding: 20px;
+            width: calc(1920px - 250px);
+            height: 100%;
+        }
+        
+        /* 筛选与设备列表区 */
+        .device-list-container {
+            width: 250px;
+            background-color: rgba(6, 27, 130, 0.1) !important;
+            border-radius: 8px;
+            padding: 15px;
+            margin-right: 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(0, 183, 255, 0.5);
+            height: calc(100% - 0px);
+            overflow: hidden;
+            max-height: 100%;
+        }
+        
+        .search-filter {
+            margin-bottom: 20px;
+        }
+        
+        .search-input-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .search-input {
+            width: 100%;
+            height: 36px;
+            background-color: rgba(0, 11, 48, 0.5);
+            border: 1px solid rgba(50, 145, 198, 0.5);
+            color: white;
+            padding-left: 30px;
+            border-radius: 4px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .filter-select {
+            width: 100%;
+            margin-bottom: 10px;
+            padding-left: 14px;
+            padding-right: 30px;
+            background-color: rgba(0, 11, 48, 0.5);
+            border: 1px solid rgba(50, 145, 198, 0.5);
+            color: white;
+            height: 36px;
+            border-radius: 4px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8.825L1.175 4 2.05 3.125 6 7.075 9.95 3.125 10.825 4z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+        
+        /* 下拉框选项样式 */
+        .filter-select option {
+            background-color: rgba(6, 27, 130, 0.9);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 8px;
+        }
+        
+        .filter-select option:hover, 
+        .filter-select option:focus, 
+        .filter-select option:active {
+            background-color: rgba(22, 72, 163, 0.8) !important;
+            color: white;
+        }
+        
+        .filter-select option:checked {
+            background-color: rgba(50, 145, 198, 0.7);
+            color: white;
+            font-weight: bold;
+        }
+        
+        /* Chrome和Edge的滚动条样式调整 */
+        .filter-select::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .filter-select::-webkit-scrollbar-track {
+            background: rgba(0, 11, 48, 0.3);
+        }
+        
+        .filter-select::-webkit-scrollbar-thumb {
+            background: rgba(50, 145, 198, 0.5);
+            border-radius: 4px;
+        }
+        
+        .filter-select::-webkit-scrollbar-thumb:hover {
+            background: rgba(50, 145, 198, 0.7);
+        }
+        
+        /* 下拉框整体样式增强 */
+        .filter-select {
+            position: relative;
+            outline: none;
+            /*box-shadow: 0 0 0 1px rgba(50, 145, 198, 0.5);*/
+        }
+        
+        .filter-select:focus {
+            box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.6);
+        }
+        
+        /* 自定义下拉菜单样式 - Firefox */
+        @-moz-document url-prefix() {
+            .filter-select {
+                border-color: rgba(50, 145, 198, 0.5);
+            }
+            
+            .filter-select:focus {
+                border-color: rgba(77, 171, 247, 0.8);
+            }
+            
+            .filter-select option {
+                background-color: #061B82;
+                color: #e0e0e0;
+                border: 1px solid rgba(50, 145, 198, 0.5);
+            }
+        }
+        
+        /* 为Element-UI选择器添加自定义样式 */
+        .el-select__inner option,
+        .filter-select option {
+            background-color: #061B82 !important;
+            color: #e0e0e0 !important;
+            border: 1px solid rgba(50, 145, 198, 0.5) !important;
+            border-radius: 2px !important;
+            font-size: 14px;
+            padding: 10px 15px;
+            transition: all 0.2s ease;
+            margin: 2px 0;
+        }
+        
+        /* Select 下拉容器 - 这个会影响某些浏览器显示下拉列表的容器 */
+        select::-ms-expand {
+            display: none;
+        }
+        
+        select:-moz-focusring {
+            color: transparent;
+            text-shadow: 0 0 0 #e0e0e0;
+        }
+        
+        /* Chrome 下拉列表容器 */
+        select.filter-select option:hover {
+            box-shadow: 0 0 10px 100px rgba(22, 72, 163, 0.8) inset;
+        }
+        
+        .el-select__inner option:hover,
+        .filter-select option:hover,
+        .el-select__inner option:focus,
+        .filter-select option:focus {
+            background-color: rgba(22, 72, 163, 0.8) !important;
+            color: white !important;
+            border-color: rgba(77, 171, 247, 0.8) !important; /* 高亮色 */
+        }
+        
+        .el-select__inner option:checked,
+        .filter-select option:checked,
+        .el-select__inner option:selected,
+        .filter-select option:selected {
+            background-color: rgba(50, 145, 198, 0.6) !important;
+            color: white !important;
+            font-weight: bold;
+            border-color: var(--highlight-color) !important;
+            box-shadow: 0 0 5px rgba(77, 171, 247, 0.4) !important;
+        }
+        
+        .device-list {
+            max-height: calc(100% - 170px);
+            overflow: hidden;
+        }
+        
+        .device-card {
+            background-color: rgba(6, 27, 130, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(50, 145, 198, 0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+            height: auto;
+        }
+        
+        .device-card.abnormal {
+            border-left: 4px solid var(--danger-color);
+        }
+        
+        .device-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            background-color: rgba(6, 27, 130, 0.5);
+        }
+        
+        .device-card.active {
+            background-color: rgba(22, 72, 163, 0.6);
+            border-left-width: 4px;
+            border-left-color: var(--highlight-color);
+        }
+        
+        .device-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-normal {
+            background-color: rgba(103, 194, 58, 0.2);
+            color: var(--success-color);
+        }
+        
+        .status-abnormal {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .device-name {
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+        
+        .device-info {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .update-time {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+        
+        .control-btn {
+            width: 100%;
+            padding: 5px;
+            font-size: 12px;
+            background-color: rgba(50, 145, 198, 0.3);
+            border: 1px solid #3291C6;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background-color: rgba(50, 145, 198, 0.7);
+            box-shadow: 0 0 10px rgba(50, 145, 198, 0.5);
+        }
+        
+        /* 设备操作与画面展示区 */
+        .device-control-container {
+            flex: 1;
+            background-color: rgba(6, 27, 130, 0.1) !important;
+            border-radius: 8px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(0, 183, 255, 0.5);
+            height: 100%;
+            max-height: 100%;
+            overflow: hidden;
+        }
+        
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+        }
+        
+        .device-title-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        
+        .device-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-right: 15px;
+        }
+        
+        .device-status-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-dot.normal {
+            background-color: var(--success-color);
+            box-shadow: 0 0 5px var(--success-color);
+        }
+        
+        .status-dot.abnormal {
+            background-color: var(--danger-color);
+            box-shadow: 0 0 5px var(--danger-color);
+        }
+        
+        .device-location {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .location-label {
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-right: 5px;
+        }
+        
+        .device-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 8px 15px;
+            background-color: rgba(50, 145, 198, 0.3);
+            border: 1px solid #3291C6;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .action-btn i, .action-btn .iconfont {
+            margin-right: 5px;
+            font-size: 16px;
+        }
+        
+        .action-btn:hover {
+            background-color: rgba(50, 145, 198, 0.7);
+            box-shadow: 0 0 10px rgba(50, 145, 198, 0.5);
+        }
+        
+        .video-container {
+            flex: 1;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(50, 145, 198, 0.3);
+            min-height: 300px;
+        }
+        
+        .video-placeholder {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .video-placeholder i {
+            font-size: 50px;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .logs-container {
+            max-height: 35%;
+            overflow: hidden;
+        }
+        
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .logs-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+        
+        .logs-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .log-table-container {
+            max-height: calc(100% - 50px);
+            overflow: hidden;
+        }
+        
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .log-table th {
+            background-color: rgba(22, 72, 163, 0.4);
+            padding: 10px;
+            text-align: left;
+            border: 1px solid rgba(50, 145, 198, 0.3);
+        }
+        
+        .log-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+            vertical-align: middle;
+        }
+        
+        .log-table tr:hover {
+            background-color: rgba(22, 72, 163, 0.3);
+        }
+        
+        .status-success {
+            color: var(--success-color);
+        }
+        
+        .status-failure {
+            color: var(--danger-color);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1919px) {
+            .wrapper {
+                transform: scale(0.95);
+                transform-origin: top left;
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .device-list-container {
+                width: 220px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            .main-content {
+                width: calc(100% - 200px);
+            }
+            
+            .device-list-container {
+                width: 200px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+            }
+            
+            .main-content {
+                width: 100%;
+                flex-direction: column;
+            }
+            
+            .device-list-container {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+        }
+        .custom-tag-primary {
+            background-color: rgba(64, 158, 255, 0.1);
+            border-color: rgba(64, 158, 255, 0.5);
+            color: #409eff;
+        }
+
+        .custom-tag {
+            display: inline-block;
+            padding: 1px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: 1px solid;
+            white-space: nowrap;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- 顶部导航栏 -->
+        <header class="header">
+            <div class="header-title">站网管理</div>
+            <div class="user-info">
+                <span>管理员</span>
+                <button class="logout-btn">退出</button>
+            </div>
+        </header>
+        
+        <div class="content-wrapper">
+            <!-- 左侧菜单栏 -->
+            <aside class="sidebar" id="sidebar">
+                <div class="menu-title">站网管理</div>
+                <div class="menu-item">设备状态监视</div>
+                <div class="menu-item active">设备远程控制</div>
+                <div class="submenu">
+                    <div class="submenu-item active">远程控制</div>
+                    <div class="submenu-item">指令控制</div>
+                </div>
+            </aside>
+            
+            <!-- 主内容区 -->
+            <main class="main-content">
+                <!-- 筛选与设备列表区 -->
+                <div class="device-list-container" id="deviceListContainer" style="background-color: rgba(6, 27, 130, 0.1) !important; border: 1px solid rgba(0, 183, 255, 0.5);">
+                    <div class="search-filter">
+                        <div class="search-input-wrapper">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="search-input el-input__inner" placeholder="搜索站点...">
+                        </div>
+                        <select class="filter-select el-select__inner">
+                            <option value="">站状态</option>
+                            <option value="normal">正常</option>
+                            <option value="abnormal">异常</option>
+                        </select>
+                        <select class="filter-select el-select__inner">
+                            <option value="">区域选择</option>
+                            <option value="east">东部</option>
+                            <option value="west">西部</option>
+                            <option value="north">北部</option>
+                            <option value="south">南部</option>
+                        </select>
+                        <select class="filter-select el-select__inner">
+                            <option value="">站类型</option>
+                            <option value="type1">类型A</option>
+                            <option value="type2">类型B</option>
+                            <option value="type3">类型C</option>
+                        </select>
+                    </div>
+                    
+                    <div class="device-list">
+                        <div class="device-card active" data-device="A01">
+                            <div class="device-status">
+                                <span class="status-badge status-normal">正常</span>
+                            </div>
+                            <div class="device-name">上海基准站</div>
+                            <div class="device-info">信号强度 95%</div>
+                            <div class="update-time">更新于 10分钟前</div>
+                            <button class="control-btn">远程控制</button>
+                        </div>
+                        
+                        <div class="device-card" data-device="A02">
+                            <div class="device-status">
+                                <span class="status-badge status-normal">正常</span>
+                            </div>
+                            <div class="device-name">杭州基准站</div>
+                            <div class="device-info">信号强度 97%</div>
+                            <div class="update-time">更新于 15分钟前</div>
+                            <button class="control-btn">远程控制</button>
+                        </div>
+                        
+                        <div class="device-card" data-device="A03">
+                            <div class="device-status">
+                                <span class="status-badge status-normal">正常</span>
+                            </div>
+                            <div class="device-name">南京基准站</div>
+                            <div class="device-info">存储空间 85%</div>
+                            <div class="update-time">更新于 20分钟前</div>
+                            <button class="control-btn">远程控制</button>
+                        </div>
+                        
+                        <div class="device-card abnormal" data-device="B01">
+                            <div class="device-status">
+                                <span class="status-badge status-abnormal">异常</span>
+                            </div>
+                            <div class="device-name">济南基准站</div>
+                            <div class="device-info">网络断开</div>
+                            <div class="update-time">更新于 1小时前</div>
+                            <button class="control-btn">远程控制</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 设备操作与画面展示区 -->
+                <div class="device-control-container" style="background-color: rgba(6, 27, 130, 0.1) !important; border: 1px solid rgba(0, 183, 255, 0.5);">
+                    <div class="device-header">
+                        <div class="device-title-wrapper">
+                            <div class="device-title">上海基准站</div>
+                            <div class="device-status-wrapper">
+                                <span class="status-dot normal"></span>
+                                <span>正常运行</span>
+                            </div>
+                        </div>
+                        <div class="device-location"><span class="location-label">位置：</span>北纬 31°12'30" 东经 121°28'12"</div>
+                    </div>
+                    
+                    <div class="device-actions">
+                        <button class="action-btn"><i class="iconfont icon-shebei1"></i>重启设备</button>
+                        <button class="action-btn"><i class="iconfont icon-a-shebei8"></i>固件升级</button>
+                        <button class="action-btn"><i class="iconfont icon-xitong1"></i>参数设置</button>
+                        <button class="action-btn"><i class="iconfont icon-shebei"></i>截图</button>
+                        <button class="action-btn"><i class="iconfont icon-yingjian"></i>录像</button>
+                    </div>
+                    
+                    <div class="video-container">
+                        <div class="video-placeholder">
+                            <i class="fas fa-video"></i>
+                            <div>实时画面展示区域</div>
+                        </div>
+                    </div>
+                    
+                    <div class="logs-container">
+                        <div class="logs-header">
+                            <div class="logs-title">操作日志</div>
+                            <div class="logs-actions">
+                                <button class="action-btn"><i class="iconfont icon-xitongsystem"></i>筛选</button>
+                                <button class="action-btn"><i class="iconfont icon-daohang1"></i>导出</button>
+                            </div>
+                        </div>
+                        
+                        <div class="log-table-container">
+                            <table class="log-table">
+                                <thead>
+                                    <tr>
+                                        <th>操作时间</th>
+                                        <th>操作类型</th>
+                                         <th>操作内容</th>
+                                        <th>操作人</th>
+                                        <th>操作结果</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>2025-01-20 15:30:45</td>
+                                        <td>参数设置</td>
+                                        <td ><span class="custom-tag custom-tag-primary">查看</span></td>
+                                        <td>管理员</td>
+                                        <td class="status-success">成功</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2025-01-20 14:15:22</td>
+                                        <td>设备重启</td>
+                                        <td><span class="custom-tag custom-tag-primary">查看</span></td>
+                                        <td>管理员</td>
+                                        <td class="status-success">成功</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2025-01-19 09:45:10</td>
+                                        <td>固件升级</td>
+                                       <td ><span class="custom-tag custom-tag-primary">查看</span></td>
+                                        <td>管理员</td>
+                                        <td class="status-success">成功</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2025-01-18 16:20:33</td>
+                                        <td>参数设置</td>
+                                        <td ><span class="custom-tag custom-tag-primary">查看</span></td>
+                                        <td>操作员</td>
+                                        <td class="status-failure">失败</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2025-01-17 11:05:18</td>
+                                        <td>设备重启</td>
+                                        <td ><span class="custom-tag custom-tag-primary">查看</span></td>
+                                        <td>管理员</td>
+                                        <td class="status-success">成功</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设备卡片点击事件
+            const deviceCards = document.querySelectorAll('.device-card');
+            deviceCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    // 移除所有卡片的active类
+                    deviceCards.forEach(c => c.classList.remove('active'));
+                    // 给当前点击的卡片添加active类
+                    this.classList.add('active');
+                    
+                    // 更新设备操作区的设备名称
+                    const deviceName = this.querySelector('.device-name').textContent;
+                    document.querySelector('.device-title').textContent = deviceName;
+                    
+                    // 更新设备状态
+                    const statusBadge = this.querySelector('.status-badge');
+                    const isNormal = statusBadge.classList.contains('status-normal');
+                    const statusText = isNormal ? '正常运行' : '运行异常';
+                    const statusDot = document.querySelector('.status-dot');
+                    
+                    if (isNormal) {
+                        statusDot.classList.remove('abnormal');
+                        statusDot.classList.add('normal');
+                    } else {
+                        statusDot.classList.remove('normal');
+                        statusDot.classList.add('abnormal');
+                    }
+                    
+                    document.querySelector('.device-status-wrapper span:nth-child(2)').textContent = statusText;
+                    
+                    // 更新视频占位符
+                    const videoPlaceholder = document.querySelector('.video-placeholder i');
+                    videoPlaceholder.className = 'fas fa-video';
+                    document.querySelector('.video-placeholder div').textContent = deviceName + ' 实时画面';
+                });
+            });
+            
+            // 远程控制按钮点击事件
+            const controlBtns = document.querySelectorAll('.control-btn');
+            controlBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击事件
+                    const card = this.closest('.device-card');
+                    const deviceName = card.querySelector('.device-name').textContent;
+                    alert('正在连接到: ' + deviceName);
+                });
+            });
+            
+            // 设备操作按钮点击事件
+            const actionBtns = document.querySelectorAll('.device-actions .action-btn');
+            actionBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const action = this.textContent;
+                    const deviceName = document.querySelector('.device-title').textContent;
+                    alert('正在对 ' + deviceName + ' 执行 ' + action + ' 操作');
+                    
+                    // 如果是截图或录像，更新视频占位符
+                    if (action.includes('截图') || action.includes('录像')) {
+                        const videoPlaceholder = document.querySelector('.video-placeholder i');
+                        videoPlaceholder.className = action.includes('截图') ? 'fas fa-camera' : 'fas fa-video';
+                        document.querySelector('.video-placeholder div').textContent = 
+                            deviceName + ' ' + (action.includes('截图') ? '截图成功' : '录像中...');
+                    }
+                });
+            });
+            
+            // 退出按钮
+            const logoutBtn = document.querySelector('.logout-btn');
+            logoutBtn.addEventListener('click', function() {
+                if (confirm('确定要退出系统吗？')) {
+                    alert('已退出系统');
+                    // 实际应用中这里应该是跳转到登录页面
+                }
+            });
+            
+            // 子菜单点击事件
+            const submenuItems = document.querySelectorAll('.submenu-item');
+            submenuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    submenuItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // 筛选和导出按钮
+            const filterBtn = document.querySelector('.logs-actions .action-btn:first-child');
+            const exportBtn = document.querySelector('.logs-actions .action-btn:last-child');
+            
+            filterBtn.addEventListener('click', function() {
+                alert('打开日志筛选面板');
+            });
+            
+            exportBtn.addEventListener('click', function() {
+                alert('正在导出操作日志');
+            });
+        });
+    </script>
+</body>
+</html> 

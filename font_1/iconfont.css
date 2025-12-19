@@ -1,0 +1,161 @@
+@font-face {
+  font-family: "iconfont"; /* Project id  */
+  src: url('iconfont.ttf?t=1744774694627') format('truetype');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-xinhao:before {
+  content: "\e697";
+}
+
+.icon-weixing:before {
+  content: "\e606";
+}
+
+.icon-xitong:before {
+  content: "\e60f";
+}
+
+.icon-xitong1:before {
+  content: "\e744";
+}
+
+.icon-xitong2:before {
+  content: "\e65e";
+}
+
+.icon-xitong3:before {
+  content: "\e64f";
+}
+
+.icon-xitong4:before {
+  content: "\e617";
+}
+
+.icon-daohangdizhi:before {
+  content: "\e65f";
+}
+
+.icon-wuxiandianbo:before {
+  content: "\ec79";
+}
+
+.icon-yingjian:before {
+  content: "\ec89";
+}
+
+.icon-weixing1:before {
+  content: "\e618";
+}
+
+.icon-xitong5:before {
+  content: "\e637";
+}
+
+.icon-daohang:before {
+  content: "\e648";
+}
+
+.icon-weixing2:before {
+  content: "\e790";
+}
+
+.icon-daohang1:before {
+  content: "\e797";
+}
+
+.icon-xitong6:before {
+  content: "\e6e7";
+}
+
+.icon-daohang2:before {
+  content: "\e60a";
+}
+
+.icon-shebei:before {
+  content: "\e74b";
+}
+
+.icon-weixing3:before {
+  content: "\e75f";
+}
+
+.icon-beidoudingwei:before {
+  content: "\e63d";
+}
+
+.icon-astronomical-full:before {
+  content: "\e95e";
+}
+
+.icon-plume-full:before {
+  content: "\e960";
+}
+
+.icon-shebei1:before {
+  content: "\e9fd";
+}
+
+.icon-weixingtongchou-weixingyunhangmoni:before {
+  content: "\e687";
+}
+
+.icon-xiaofangchebeidoushuju:before {
+  content: "\e726";
+}
+
+.icon-a-xitong3x:before {
+  content: "\e619";
+}
+
+.icon-shebeishebei:before {
+  content: "\e607";
+}
+
+.icon-a-xinhao4:before {
+  content: "\eb85";
+}
+
+.icon-xitongsystem:before {
+  content: "\e60c";
+}
+
+.icon-a-shebei8:before {
+  content: "\ebdd";
+}
+
+.icon-weixing4:before {
+  content: "\e52b";
+}
+
+.icon-a-weixingjieshoutansuo:before {
+  content: "\e798";
+}
+
+.icon-a-weixingdiqiuwangluo:before {
+  content: "\e7c5";
+}
+
+.icon-a-weixingdingweitaikongzhanzheng:before {
+  content: "\e89b";
+}
+
+.icon-a-GPSbeidou:before {
+  content: "\e61c";
+}
+
+.icon-beidou:before {
+  content: "\e61e";
+}
+
+.icon-weixing5:before {
+  content: "\e60d";
+}
+

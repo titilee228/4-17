@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据分发</title>
+  <!-- 先加载必要的样式和库 -->
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  
+  <!-- 然后加载JavaScript库 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/map/js/china.js"></script>
+  <!-- 添加Chart.js库 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* 基础样式和变量 */
+    :root {
+      --primary-color: #1648A3;
+      --background-dark: #000B30;
+      --background-light: #061B82;
+      --border-color: rgba(50, 145, 198, 0.3);
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0b9d8;
+      --highlight-color: #4dabf7;
+      --success-color: #67c23a;
+      --warning-color: #e6a23c;
+      --danger-color: #f44336;
+      --card-background: rgba(6, 27, 130, 0.5);
+      --hover-color: rgba(50, 145, 198, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Microsoft YaHei", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--background-dark) 0%, var(--background-light) 100%) fixed;
+      color: var(--text-primary);
+      overflow-x: hidden;
+      width: 100%;
+      height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+          linear-gradient(rgba(22, 72, 163, 0.3) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(22, 72, 163, 0.3) 1px, transparent 1px);
+      background-size: 20px 20px;
+      z-index: -1;
+    }
+
+    /* 顶部导航栏 */
+    .top-nav {
+      height: 60px;
+      background-color: rgba(6, 27, 130, 0.8);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      border-bottom: 1px solid rgba(50, 145, 198, 0.5);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      position: relative;
+      z-index: 10;
+    }
+
+    .system-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 0 10px rgba(50, 145, 198, 0.7);
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      letter-spacing: 0.1em;
+    }
+
+    .user-info {
+      position: absolute;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-info span {
+      font-size: 16px;
+      color: white;
+    }
+
+    .logout-btn {
+      background-color: rgba(50, 145, 198, 0.3);
+      color: white;
+      border: 1px solid #3291C6;
+      border-radius: 4px;
+      padding: 5px 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 16px;
+    }
+
+    .logout-btn:hover {
+      background-color: rgba(50, 145, 198, 0.7);
+      box-shadow: 0 0 10px rgba(50, 145, 198, 0.7);
+    }
+
+    .app-container {
+      display: flex;
+      height: calc(100vh - 60px);
+    }
+
+    /* 侧边栏 */
+    .sidebar {
+      width: 250px;
+      background-color: rgba(6, 27, 130, 0.7);
+      padding: 20px 0;
+      height: 100%;
+      border-right: 1px solid var(--border-color);
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .logo {
+      text-align: center;
+      padding: 10px 0 20px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+
+    .logo h2 {
+      color: var(--highlight-color);
+      font-size: 20px;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(77, 171, 247, 0.5);
+    }
+
+    .menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      border-left: 4px solid transparent;
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .menu-item i {
+      margin-right: 10px;
+      color: var(--highlight-color);
+    }
+
+    .menu-item:hover {
+      background-color: var(--hover-color);
+      color: var(--highlight-color);
+    }
+
+    .menu-item.active {
+      background-color: rgba(50, 145, 198, 0.5);
+      border-left: 4px solid var(--highlight-color);
+      color: white;
+    }
+
+    /* 主内容区 */
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    /* 搜索区域 */
+    .search-container {
+      background-color: var(--card-background);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      padding: 15px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .search-container::before, .table-container::before, .chart-container::before {
+    /*  content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #3291C6, transparent);*/
+    }
+
+    .search-container::after, .table-container::after, .chart-container::after {
+ /*     content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #3291C6, transparent);*/
+    }
+
+    .search-title {
+      color: var(--highlight-color);
+      margin-bottom: 15px;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-title i {
+      margin-right: 10px;
+    }
+
+    .search-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .search-form-item {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .search-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* 表格区域 */
+    .section-container {
+      background: rgba(6, 27, 130, 0.5);
+      border: 1px solid rgba(50, 145, 198, 0.3);
+      border-radius: 8px;
+      padding: 10px;
+      padding-bottom: 0px; /* 从2px减少到0px，彻底消除底部内边距 */
+      transition: all 0.3s;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: none;
+      /*margin: 0 0 20px 0;*/
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 15px; /* 保持面板之间的间距 */
+    }
+    
+    .section-container:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 网格背景图案 */
+    .section-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(50, 145, 198, 0.05) 25%, transparent 25%, transparent 50%, rgba(50, 145, 198, 0.05) 50%, rgba(50, 145, 198, 0.05) 75%, transparent 75%, transparent);
+      background-size: 4px 4px;
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    /* 顶部渐变线条 */
+    .section-container::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #3291C6, transparent);
+      z-index: 1;
+    }
+    
+    /* 底部渐变线条 - 使用额外的元素 */
+    .section-container .bottom-gradient {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px; /* 从2px减少到1px */
+      background: linear-gradient(90deg, transparent, #3291C6, transparent);
+      z-index: 1;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      color: #3291C6;
+      margin-bottom: 10px;
+      text-shadow: 0 0 5px rgba(50, 145, 198, 0.3);
+      position: relative;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+    }
+
+    .section-title::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 50px;
+      height: 2px;
+      background: #3291C6;
+    }
+
+    .section-title i {
+      margin-right: 8px;
+      color: #4dabf7;
+    }
+
+    .section-content {
+      background-color: var(--card-background);
+      border-radius: 8px;
+      margin-bottom: 0px;
+      padding-bottom: 0px;
+      /*border: 1px solid var(--border-color);*/
+      /*padding: 15px;*/
+    }
+
+    .table-container {
+      margin-bottom: 20px;
+      background-color: var(--card-background);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      position: relative;
+      padding: 0;
+      height: auto;
+    }
+
+    .el-table {
+      background-color: transparent !important;
+      color: var(--text-primary) !important;
+      border: none !important;
+    }
+
+    .el-table::before {
+      display: none;
+    }
+
+    .el-table__body-wrapper {
+      overflow-y: visible !important;
+      height: auto !important;
+    }
+
+    .el-table__header-wrapper {
+      background-color: transparent !important;
+    }
+
+    .el-table th {
+      background: rgba(19, 62, 151, 0.8) !important;
+      color: #ffffff !important;
+      border-bottom: 1px solid rgba(50, 145, 198, 0.5) !important;
+      padding: 10px 12px !important;
+      font-weight: bold !important;
+      text-shadow: 0 0 5px rgba(77, 171, 247, 0.7) !important;
+      white-space: nowrap !important;
+    }
+
+    .el-table td {
+      background-color: transparent !important;
+      color: var(--text-primary) !important;
+      border-bottom: 1px solid rgba(50, 145, 198, 0.1) !important;
+      padding: 6px 10px !important;
+    }
+
+    .el-table--border, .el-table--group {
+      border: 1px solid rgba(50, 145, 198, 0.1) !important;
+    }
+
+    .el-table--border td, .el-table--border th {
+      border-right: 1px solid rgba(50, 145, 198, 0.1) !important;
+    }
+    
+    /* 修复右侧边框白线问题 */
+    .el-table--border::after, 
+    .el-table__fixed-right::before,
+    .el-table .gutter {
+      background-color: transparent !important;
+      width: 0 !important;
+    }
+    
+    .el-table__fixed-right-patch {
+      background-color: transparent !important;
+      border-bottom: 0 !important;
+    }
+    
+    /* 移除表格右侧白线 */
+    .el-table__column-resize-proxy {
+      background-color: transparent !important;
+    }
+    
+    /* 恢复Element UI样式 */
+    .el-table__body tr {
+      background-color: transparent !important;
+      transition: all 0.3s;
+    }
+
+    .el-table__body tr:hover>td.el-table__cell {
+      background-color: rgba(50, 145, 198, 0.1) !important;
+    }
+    
+    .el-button {
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+
+    .el-button--default {
+      background-color: rgba(19, 62, 151, 0.4) !important;
+      border-color: rgba(50, 145, 198, 0.5) !important;
+      color: var(--text-primary) !important;
+    }
+
+    .el-button--default:hover {
+      background-color: rgba(19, 62, 151, 0.6) !important;
+      border-color: var(--highlight-color) !important;
+      box-shadow: 0 0 8px rgba(50, 145, 198, 0.5);
+    }
+
+    .el-button--primary {
+      background-color: rgba(22, 72, 163, 0.8) !important;
+      border-color: rgba(50, 145, 198, 0.8) !important;
+      color: white !important;
+    }
+
+    .el-button--primary:hover, .el-button--primary:focus {
+      background-color: rgba(50, 145, 198, 0.8) !important;
+      border-color: var(--highlight-color) !important;
+      box-shadow: 0 0 8px rgba(77, 171, 247, 0.7);
+    }
+
+    .el-input__inner, .el-select-dropdown__item, .el-select .el-input__inner {
+      background-color: rgba(10, 20, 50, 0.7) !important;
+      border: 1px solid var(--border-color) !important;
+      color: var(--text-primary) !important;
+    }
+
+    .el-input__inner:focus, .el-select .el-input__inner:focus {
+      border-color: var(--highlight-color) !important;
+    }
+
+    .el-select-dropdown {
+      background-color: rgba(10, 20, 50, 0.9) !important;
+      border: 1px solid var(--border-color) !important;
+    }
+
+    .el-select-dropdown__item.hover, .el-select-dropdown__item:hover {
+      background-color: rgba(22, 72, 163, 0.5) !important;
+    }
+
+    .el-select-dropdown__item.selected {
+      color: var(--highlight-color) !important;
+      font-weight: bold;
+    }
+
+    .el-pagination {
+      color: var(--text-primary) !important;
+      text-align: right;
+      margin-top: 15px;
+    }
+
+    .el-pagination button, .el-pagination span:not([class*=suffix]) {
+      background-color: transparent !important;
+      color: var(--text-primary) !important;
+    }
+
+    .el-pagination button:hover {
+      color: var(--highlight-color) !important;
+    }
+
+    .el-pagination__sizes .el-input .el-input__inner {
+      font-size: 13px;
+      background-color: rgba(10, 20, 50, 0.7) !important;
+      border-color: rgba(50, 145, 198, 0.3) !important;
+      color: var(--text-primary) !important;
+    }
+
+    .el-pagination.is-background .el-pager li {
+      background-color: rgba(19, 62, 151, 0.4) !important;
+      color: var(--text-primary) !important;
+      border: 1px solid rgba(50, 145, 198, 0.3);
+    }
+
+    .el-pagination.is-background .el-pager li:hover {
+      color: var(--highlight-color) !important;
+      background-color: rgba(19, 62, 151, 0.6) !important;
+    }
+
+    .el-pagination.is-background .el-pager li.active {
+      background-color: rgba(50, 145, 198, 0.7) !important;
+      color: white !important;
+      border: 1px solid rgba(77, 171, 247, 0.5);
+    }
+
+    .el-date-editor .el-range-input {
+      background-color: transparent !important;
+      color: var(--text-primary) !important;
+    }
+
+    .el-date-editor .el-range-separator {
+      color: var(--text-secondary) !important;
+    }
+
+    .el-tag--success {
+      background-color: rgba(103, 194, 58, 0.1) !important;
+      border-color: rgba(103, 194, 58, 0.2) !important;
+      color: var(--success-color) !important;
+    }
+
+    .el-tag--warning {
+      background-color: rgba(230, 162, 60, 0.1) !important;
+      border-color: rgba(230, 162, 60, 0.2) !important;
+      color: var(--warning-color) !important;
+    }
+
+    .el-tag--danger {
+      background-color: rgba(245, 108, 108, 0.1) !important;
+      border-color: rgba(245, 108, 108, 0.2) !important;
+      color: var(--danger-color) !important;
+    }
+    
+    /* 自定义分页组件样式 */
+    .custom-pagination {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 10px 0;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    #pagerItems {
+      display: flex;
+      align-items: center;
+    }
+    
+    .custom-pagination button.btn-text {
+      background: none;
+      border: none;
+      color: var(--highlight-color);
+      cursor: pointer;
+      padding: 3px 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    .custom-pagination button.btn-text:hover {
+      color: white;
+      text-shadow: 0 0 5px rgba(77, 171, 247, 0.7);
+    }
+    
+    .custom-pagination button.btn-text:disabled {
+      color: rgba(224, 224, 224, 0.3);
+      cursor: not-allowed;
+    }
+    
+    .custom-pagination button.active {
+      color: #fff;
+      background-color: rgba(77, 171, 247, 0.5);
+    }
+    
+    .custom-pagination input {
+      background-color: rgba(10, 20, 50, 0.7);
+      border: 1px solid rgba(50, 145, 198, 0.3);
+      color: var(--text-primary);
+      border-radius: 4px;
+      padding: 2px 5px;
+      width: 40px;
+      text-align: center;
+    }
+
+    /* 分页选择器样式 */
+    .custom-select {
+      background-color: rgba(10, 20, 50, 0.7);
+      border: 1px solid rgba(50, 145, 198, 0.3);
+      color: var(--text-primary);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 13px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%233291C6' d='M6 8.825L1.175 4 2.05 3.125 6 7.075 9.95 3.125 10.825 4z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      padding-right: 24px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .custom-select:hover, .custom-select:focus {
+      border-color: rgba(77, 171, 247, 0.6);
+      box-shadow: 0 0 5px rgba(77, 171, 247, 0.3);
+      outline: none;
+    }
+    
+    .custom-select option {
+      background-color: rgba(10, 20, 50, 0.9);
+      color: var(--text-primary);
+    }
+
+    /* 响应式设计 */
+    @media screen and (max-width: 1600px) {
+      .horizontal-charts {
+        flex-direction: column;
+      }
+      
+      .chart-container {
+        min-width: 100%;
+      }
+    }
+
+    @media screen and (max-width: 1200px) {
+      .search-form {
+        flex-direction: column;
+      }
+      
+      .search-form-item {
+        width: 100%;
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      .app-container {
+        flex-direction: column;
+      }
+      
+      .sidebar {
+        width: 100%;
+        height: auto;
+      }
+      
+      .system-title {
+        position: static;
+        transform: none;
+        font-size: 18px;
+      }
+      
+      .user-info {
+        position: static;
+      }
+      
+      .top-nav {
+        height: auto;
+        padding: 10px;
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+
+    /* 图表区域样式 */
+    .horizontal-charts {
+      display: flex;
+      gap: 15px; /* 从20px减少到15px */
+      margin-top: 15px; /* 从20px减少到15px */
+    }
+
+    .chart-container {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      flex: 1;
+      position: relative;
+      min-width: 400px;
+    }
+
+    .chart-title {
+      color: var(--highlight-color);
+      margin-bottom: 15px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .chart {
+      width: 100%;
+      height: 260px;
+      background-color: transparent !important;
+      margin-bottom: 0px;
+    }
+
+    #mapChart {
+      height: 300px !important;
+    }
+    
+    #subscriberChart, #trendChart {
+      height: 260px !important;
+      min-height: 260px !important;
+      margin-bottom: 0 !important;
+    }
+    
+    /* 按钮样式 */
+    .btn-text {
+      background: none;
+      border: none;
+      color: #4dabf7;
+      cursor: pointer;
+      padding: 3px 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .btn-text:hover {
+      color: white;
+      text-shadow: 0 0 5px rgba(77, 171, 247, 0.7);
+    }
+
+    /* 移除图表容器渐变线条 */
+    .chart-no-gradient::before,
+    .chart-no-gradient::after,
+    .chart-no-gradient .bottom-gradient {
+      display: none !important;
+    }
+
+    /* 确保该类也应用到更外层容器 */
+    .section-container.chart-no-gradient::before,
+    .section-container.chart-no-gradient::after,
+    .section-container.chart-no-gradient .bottom-gradient {
+      display: none !important;
+      content: none !important;
+      background: none !important;
+    }
+    .menu-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #3291C6;
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+    margin-bottom: 15px;
+}
+  </style>
+</head>
+<body>
+<div class="top-nav">
+  <div class="system-title">数据分发</div>
+  <div class="user-info">
+    <span>管理员</span>
+    <button class="logout-btn">退出</button>
+  </div>
+</div>
+
+<div id="app" class="app-container">
+  <!-- 左侧菜单栏 -->
+<!--   <div class="sidebar">
+    <div class="logo">
+      <h2>数据分发</h2>
+    </div>
+    <div class="menu">
+      <div class="menu-item">
+        <i class="el-icon-setting"></i>
+        <span>数据源配置</span>
+      </div>
+      <div class="menu-item active">
+        <i class="el-icon-bell"></i>
+        <span>数据订阅服务</span>
+      </div>
+      <div class="menu-item">
+        <i class="el-icon-share"></i>
+        <span>数据共享服务</span>
+      </div>
+    </div>
+  </div> -->
+
+      <!-- 左侧菜单栏 -->
+    <div class="sidebar">
+      <div class="menu-title">数据分发</div>
+      <div class="menu-item active">
+        <i class="el-icon-setting"></i>
+        <span>数据源配置</span>
+      </div>
+      <div class="menu-item">
+         <i class="el-icon-bell"></i>
+        <span>数据订阅服务</span>
+      </div>
+      <div class="menu-item">
+       <i class="el-icon-share"></i>
+        <span>数据共享服务</span>
+      </div>
+    </div>
+
+  <!-- 主体内容区 -->
+  <div class="main-content">
+    <!-- 搜索组件 -->
+    <div class="search-container chart-no-gradient">
+      <div class="search-title">
+        <i class="el-icon-search"></i>
+        <span>订阅服务检索</span>
+      </div>
+      <div class="search-form">
+        <div class="search-form-item">
+          <el-input v-model="searchForm.sourceId" placeholder="数据源标识"></el-input>
+        </div>
+        <div class="search-form-item">
+          <el-select v-model="searchForm.subscriber" placeholder="订阅者" style="width: 100%">
+            <el-option label="全部订阅者" value=""></el-option>
+            <el-option label="业务处理分系统" value="业务处理分系统"></el-option>
+            <el-option label="监测分系统" value="监测分系统"></el-option>
+            <el-option label="运营服务分系统" value="运营服务分系统"></el-option>
+            <el-option label="运行管理分系统" value="运行管理分系统"></el-option>
+          </el-select>
+        </div>
+        <div class="search-form-item">
+          <el-select v-model="searchForm.dataType" placeholder="订阅数据类型" style="width: 100%">
+            <el-option label="全部类型" value=""></el-option>
+            <el-option label="观测数据" value="观测数据"></el-option>
+            <el-option label="气象数据" value="气象数据"></el-option>
+            <el-option label="星历数据" value="星历数据"></el-option>
+            <el-option label="产品数据" value="产品数据"></el-option>
+          </el-select>
+        </div>
+        <div class="search-form-item">
+          <el-date-picker
+                  v-model="searchForm.timeRange"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  style="width: 100%">
+          </el-date-picker>
+        </div>
+        <div class="search-buttons">
+          <el-button @click="resetSearch">重置</el-button>
+          <el-button type="primary" @click="handleSearch">查询</el-button>
+        </div>
+      </div>
+      <div class="bottom-gradient"></div>
+    </div>
+
+    <!-- 表格展示区 -->
+    <div class="section-container chart-no-gradient" style="margin-bottom: 20px;">
+      <div class="section-title">
+        <i class="el-icon-tickets"></i>
+        <span>订阅服务列表</span>
+      </div>
+      <div class="section-content">
+        <div class="table-container">
+          <div class="el-table custom-table el-table--fit el-table--border el-table--scrollable-y el-table--enable-row-hover el-table--enable-row-transition" style="width: 100%; height: 300px;">
+            <div class="el-table__header-wrapper">
+              <table cellspacing="0" cellpadding="0" border="0" class="el-table__header" style="width: 100%;">
+                <colgroup>
+                  <col name="el-table_1_column_1" width="180">
+                  <col name="el-table_1_column_2" width="311">
+                  <col name="el-table_1_column_3" width="120">
+                  <col name="el-table_1_column_4" width="311">
+                  <col name="el-table_1_column_5" width="311">
+                  <col name="el-table_1_column_6" width="250">
+                  <col name="el-table_1_column_7" width="100">
+                </colgroup>
+                <thead class="has-gutter">
+                  <tr class="">
+                    <th colspan="1" rowspan="1" class="el-table__cell">
+                      <div class="cell">数据源标识</div>
+                    </th>
+                    <th colspan="1" rowspan="1" class="el-table__cell">
+                      <div class="cell">订阅者</div>
+                    </th>
+                    <th colspan="1" rowspan="1" class="el-table__cell">
+                      <div class="cell">订阅状态</div>
+                    </th>
+                    <th colspan="1" rowspan="1" class="el-table__cell">
+                      <div class="cell">共享状态</div>
+                    </th>
+                    <th colspan="1" rowspan="1" class="el-table__cell">
+                      <div class="cell">传输协议</div>
+                    </th>
+                    <th colspan="1" rowspan="1" class="el-table__cell">
+                      <div class="cell">订阅有效时间</div>
+                    </th>
+                    <th colspan="1" rowspan="1" class="el-table__cell">
+                      <div class="cell">操作</div>
+                    </th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+            <div class="el-table__body-wrapper is-scrolling-none" style="height: 251px;">
+              <table cellspacing="0" cellpadding="0" border="0" class="el-table__body" style="width: 100%;">
+                <colgroup>
+                  <col name="el-table_1_column_1" width="180">
+                  <col name="el-table_1_column_2" width="311">
+                  <col name="el-table_1_column_3" width="120">
+                  <col name="el-table_1_column_4" width="311">
+                  <col name="el-table_1_column_5" width="311">
+                  <col name="el-table_1_column_6" width="250">
+                  <col name="el-table_1_column_7" width="100">
+                </colgroup>
+                <tbody>
+                  <tr class="el-table__row">
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">SRC-0001</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">运营服务分系统</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-active">有效</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-expired">过期</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="el-tag el-tag--success el-tag--small el-tag--light">HTTP/HTTPS</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">2025-04-01 至 2025-05-03</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <button type="button" class="el-button el-button--text el-button--small btn-text">
+                          <span>编辑</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="el-table__row">
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">SRC-0002</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">监测评估分系统</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-active">有效</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-active">正常</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="el-tag el-tag--success el-tag--small el-tag--light">UDP</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">2025-05-01 至 2026-01-01</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <button type="button" class="el-button el-button--text el-button--small btn-text">
+                          <span>编辑</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="el-table__row">
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">SRC-0003</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">业务处理分系统</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-active">有效</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-active">正常</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="el-tag el-tag--success el-tag--small el-tag--light">FTP</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">2025-04-15 至 2026-04-15</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <button type="button" class="el-button el-button--text el-button--small btn-text">
+                          <span>编辑</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr class="el-table__row">
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">SRC-0004</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">运行管理分系统</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-expired">过期</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-expired">过期</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="el-tag el-tag--success el-tag--small el-tag--light">TCP/IP</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">2024-06-01 至 2024-12-01</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <button type="button" class="el-button el-button--text el-button--small btn-text">
+                          <span>编辑</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                   <tr class="el-table__row">
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">SRC-0002</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">监测评估分系统</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-active">有效</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-active">正常</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="el-tag el-tag--success el-tag--small el-tag--light">UDP</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">2025-05-01 至 2026-01-01</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <button type="button" class="el-button el-button--text el-button--small btn-text">
+                          <span>编辑</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="el-table__row">
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">SRC-0003</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">业务处理分系统</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-active">有效</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-active">正常</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="el-tag el-tag--success el-tag--small el-tag--light">FTP</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">2025-04-15 至 2026-04-15</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <button type="button" class="el-button el-button--text el-button--small btn-text">
+                          <span>编辑</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  
+       <tr class="el-table__row">
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">SRC-0003</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">业务处理分系统</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-active">有效</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="status-active">正常</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <span class="el-tag el-tag--success el-tag--small el-tag--light">FTP</span>
+                      </div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">2025-04-15 至 2026-04-15</div>
+                    </td>
+                    <td rowspan="1" colspan="1" class="el-table__cell">
+                      <div class="cell">
+                        <button type="button" class="el-button el-button--text el-button--small btn-text">
+                          <span>编辑</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <!-- ... 其他行保持不变 ... -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="custom-pagination" id="pagination">
+            <span style="margin-right: 15px;">共 <span id="totalCount">{{total}}</span> 条</span>
+            <select id="pageSizeSelect" class="custom-select" style="width: auto; margin-right: 15px;" @change="handlePageSizeChange">
+              <option value="10">10条/页</option>
+              <option value="20">20条/页</option>
+              <option value="50">50条/页</option>
+              <option value="100">100条/页</option>
+            </select>
+            <button class="btn btn-text" id="prevPage" @click="handlePrevPage" :disabled="currentPage === 1">上一页</button>
+            <div id="pagerItems" style="display: flex;"></div>
+            <button class="btn btn-text" id="nextPage" @click="handleNextPage" :disabled="currentPage === Math.ceil(total/pageSize)">下一页</button>
+            <div style="margin-left: 15px;">
+              跳至<input type="number" id="jumpPage" min="1" style="width: 50px; margin: 0 5px;" class="custom-input" v-model="jumpPageNum">页
+              <button class="btn btn-text" id="jumpBtn" @click="handleJumpPage">跳转</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="horizontal-charts">
+      <!-- 散点地图 -->
+      <div class="section-container chart-no-gradient">
+        <div class="section-title">
+          <i class="el-icon-data-line"></i>
+          <span>订阅分布散点图（全国订阅量分布）</span>
+        </div>
+        <div style="width: 100%; height: 300px; display: flex; justify-content: center; align-items: center; background-color: transparent !important;">
+          <!-- 此区域留空，用于手动贴图 -->
+        </div>
+        <div class="bottom-gradient"></div>
+      </div>
+
+      <!-- 柱状图 -->
+      <div class="section-container chart-no-gradient">
+        <div class="section-title">
+          <i class="el-icon-s-data"></i>
+          <span>分系统订阅量统计</span>
+        </div>
+        <div class="section-content chart-no-gradient" style="margin-bottom: 0px; padding-bottom: 0px;">
+          <div id="subscriberChart" class="chart" style="height: 260px; width: 100%; min-height: 260px; margin-bottom: 0;"></div>
+        </div>
+        <div class="bottom-gradient" style="bottom: 0;"></div>
+      </div>
+
+      <!-- 折线图 -->
+      <div class="section-container chart-no-gradient">
+        <div class="section-title">
+          <i class="el-icon-data-analysis"></i>
+          <span>订阅量趋势统计</span>
+        </div>
+        <div class="section-content chart-no-gradient" style="margin-bottom: 0px; padding-bottom: 0px;">
+          <div id="trendChart" class="chart" style="height: 260px; width: 100%; min-height: 260px; margin-bottom: 0;"></div>
+        </div>
+        <div class="bottom-gradient" style="bottom: 0;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  new Vue({
+    el: '#app',
+    data() {
+      return {
+        searchForm: {
+          sourceId: '',
+          subscriber: '',
+          dataType: '',
+          timeRange: []
+        },
+        tableData: [],
+        currentPage: 1,
+        pageSize: 10,
+        total: 0,
+        mapChart: null,
+        subscriberChart: null,
+        trendChart: null,
+        jumpPageNum: 1,
+        // 模拟城市坐标数据
+        cityData: [
+          {name: '北京', value: [116.46, 39.92, 120]},
+          {name: '上海', value: [121.48, 31.22, 100]},
+          {name: '广州', value: [113.23, 23.16, 90]},
+          {name: '深圳', value: [114.07, 22.62, 80]},
+          {name: '成都', value: [104.06, 30.67, 70]},
+          {name: '西安', value: [108.95, 34.27, 60]},
+          {name: '武汉', value: [114.31, 30.52, 50]},
+          {name: '南京', value: [118.78, 32.04, 40]},
+          {name: '杭州', value: [120.19, 30.26, 30]},
+          {name: '天津', value: [117.2, 39.13, 20]}
+        ]
+      }
+    },
+    mounted() {
+      // 只处理数据获取和事件监听，图表初始化由独立脚本处理
+      this.fetchTableData();
+      window.addEventListener('resize', this.handleResize);
+      
+      // 添加退出按钮点击事件
+      document.querySelector('.logout-btn').addEventListener('click', function() {
+        alert('您已成功退出系统');
+      });
+      
+      // 初始化自定义分页
+      this.$nextTick(() => {
+        this.updatePagination();
+      });
+      
+      console.log("Vue实例已挂载，表格数据已加载，图表将由独立脚本初始化");
+    },
+    beforeDestroy() {
+      window.removeEventListener('resize', this.handleResize);
+    },
+    methods: {
+      formatDate(date) {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      },
+      getProtocolTagType(protocol) {
+        const map = {
+          'HTTP/HTTPS': 'success',
+          'UDP': '',
+          'FTP': 'warning',
+          'TCP/IP': 'danger',
+          'NTRIP': 'primary'
+        };
+        return map[protocol] || '';
+      },
+      handleEdit(row) {
+        this.$message({
+          message: '编辑订阅: ' + row.sourceId,
+          type: 'info'
+        });
+      },
+      handleSearch() {
+        this.currentPage = 1;
+        this.fetchTableData();
+      },
+      resetSearch() {
+        this.searchForm = {
+          sourceId: '',
+          subscriber: '',
+          dataType: '',
+          timeRange: []
+        };
+        this.handleSearch();
+      },
+      handleSizeChange(val) {
+        this.pageSize = val;
+        this.fetchTableData();
+      },
+      handleCurrentChange(val) {
+        this.currentPage = val;
+        this.fetchTableData();
+      },
+      handleResize() {
+        // 简化后的resize处理，不再处理图表
+        console.log("窗口大小改变");
+      },
+      fetchTableData() {
+        // 使用固定数据
+        this.tableData = [
+          {
+            sourceId: 'SRC-0001',
+            subscriber: '运营服务分系统',
+            subscriptionStatus: '有效',
+            shareStatus: '过期',
+            protocol: 'HTTP/HTTPS',
+            timeRange: '2025-04-01 至 2025-05-03'
+          },
+          // ... 可以添加更多数据，这里简化
+        ];
+        this.total = 50; // 总共50条记录
+      },
+      // 添加自定义分页处理方法
+      handlePageSizeChange(event) {
+        this.pageSize = parseInt(event.target.value);
+        this.currentPage = 1;
+        this.fetchTableData();
+        this.updatePagination();
+      },
+      handlePrevPage() {
+        if (this.currentPage > 1) {
+          this.currentPage--;
+          this.fetchTableData();
+          this.updatePagination();
+        }
+      },
+      handleNextPage() {
+        const totalPages = Math.ceil(this.total / this.pageSize);
+        if (this.currentPage < totalPages) {
+          this.currentPage++;
+          this.fetchTableData();
+          this.updatePagination();
+        }
+      },
+      handlePageClick(page) {
+        this.currentPage = page;
+        this.fetchTableData();
+        this.updatePagination();
+      },
+      handleJumpPage() {
+        const jumpPage = parseInt(this.jumpPageNum);
+        const totalPages = Math.ceil(this.total / this.pageSize);
+        if (!isNaN(jumpPage) && jumpPage >= 1 && jumpPage <= totalPages) {
+          this.currentPage = jumpPage;
+          this.fetchTableData();
+          this.updatePagination();
+        }
+      },
+      updatePagination() {
+        // 更新分页器
+        const pagerItems = document.getElementById('pagerItems');
+        pagerItems.innerHTML = '';
+        
+        // 计算总页数
+        const totalPages = Math.ceil(this.total / this.pageSize);
+        
+        // 更新显示的总记录数
+        document.getElementById('totalCount').textContent = this.total;
+        
+        // 生成分页按钮
+        let startPage = Math.max(1, this.currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        if (endPage - startPage < 4) {
+          startPage = Math.max(1, endPage - 4);
+        }
+        
+        // 第一页
+        if (startPage > 1) {
+          const firstPage = document.createElement('button');
+          firstPage.className = 'btn btn-text';
+          firstPage.textContent = '1';
+          firstPage.addEventListener('click', () => this.handlePageClick(1));
+          pagerItems.appendChild(firstPage);
+          
+          if (startPage > 2) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            ellipsis.style.margin = '0 5px';
+            pagerItems.appendChild(ellipsis);
+          }
+        }
+        
+        // 页码按钮
+        for (let i = startPage; i <= endPage; i++) {
+          const pageBtn = document.createElement('button');
+          pageBtn.className = 'btn btn-text';
+          if (i === this.currentPage) {
+            pageBtn.classList.add('active');
+          }
+          pageBtn.textContent = i;
+          pageBtn.addEventListener('click', () => this.handlePageClick(i));
+          pagerItems.appendChild(pageBtn);
+        }
+        
+        // 最后一页
+        if (endPage < totalPages) {
+          if (endPage < totalPages - 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            ellipsis.style.margin = '0 5px';
+            pagerItems.appendChild(ellipsis);
+          }
+          
+          const lastPage = document.createElement('button');
+          lastPage.className = 'btn btn-text';
+          lastPage.textContent = totalPages;
+          lastPage.addEventListener('click', () => this.handlePageClick(totalPages));
+          pagerItems.appendChild(lastPage);
+        }
+        
+        // 更新上一页下一页按钮状态
+        document.getElementById('prevPage').disabled = this.currentPage === 1;
+        document.getElementById('nextPage').disabled = this.currentPage === totalPages;
+        
+        // 更新跳转框
+        document.getElementById('jumpPage').value = this.currentPage;
+        
+        // 更新每页条数选择
+        document.getElementById('pageSizeSelect').value = this.pageSize;
+      }
+    }
+  });
+</script>
+
+<!-- 专门用于初始化图表的脚本 -->
+<script>
+  // 等待页面完全加载
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      console.log("页面完全加载，开始独立初始化图表...");
+      
+      try {
+        // 分系统订阅量统计图表
+        var subscriberChart = echarts.init(document.getElementById('subscriberChart'));
+        subscriberChart.setOption({
+          backgroundColor: 'transparent',
+          tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'shadow' }
+          },
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            top: '15%',
+            containLabel: true
+          },
+          xAxis: {
+            type: 'category',
+            data: ['业务处理', '监测评估', '运营服务', '运行管理'],
+            axisLine: { lineStyle: { color: '#3291C6' } },
+            axisLabel: { color: '#e0e0e0' }
+          },
+          yAxis: {
+            type: 'value',
+            axisLine: { lineStyle: { color: '#3291C6' } },
+            axisLabel: { color: '#e0e0e0' },
+            splitLine: { lineStyle: { color: 'rgba(50, 145, 198, 0.1)' } }
+          },
+          series: [{
+            name: '订阅量',
+            type: 'bar',
+            data: [320, 280, 190, 150],
+            barWidth: '50%',  // 调整柱子宽度
+            itemStyle: {
+              color: function(params) {
+                // 使用与主色调搭配的颜色，每个柱子使用渐变色
+                const gradientColors = [
+                  new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: '#4dabf7' },
+                    { offset: 1, color: '#1a7dcb' }
+                  ]),
+                  new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: '#36c6d3' },
+                    { offset: 1, color: '#2596a3' }
+                  ]),
+                  new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: '#5b7fff' },
+                    { offset: 1, color: '#3f5ad3' }
+                  ]),
+                  new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: '#4671d5' },
+                    { offset: 1, color: '#1648A3' }
+                  ])
+                ];
+                return gradientColors[params.dataIndex];
+              },
+              // 添加边框效果
+              borderRadius: [4, 4, 0, 0],
+              // 添加数值标签
+              label: {
+                show: true,
+                position: 'top',
+                color: '#e0e0e0',
+                fontSize: 12
+              }
+            }
+          }]
+        });
+        console.log("分系统订阅量统计图表初始化完成");
+        
+        // 订阅量趋势统计图表
+        var trendChart = echarts.init(document.getElementById('trendChart'));
+        trendChart.setOption({
+          backgroundColor: 'transparent',
+          tooltip: { trigger: 'axis' },
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            top: '15%',
+            containLabel: true
+          },
+          xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月'],
+            axisLine: { lineStyle: { color: '#3291C6' } },
+            axisLabel: { color: '#e0e0e0' }
+          },
+          yAxis: {
+            type: 'value',
+            axisLine: { lineStyle: { color: '#3291C6' } },
+            axisLabel: { color: '#e0e0e0' },
+            splitLine: { lineStyle: { color: 'rgba(50, 145, 198, 0.1)' } }
+          },
+          series: [{
+            name: '订阅量',
+            type: 'line',
+            stack: '总量',
+            data: [120, 132, 101, 134, 90, 230, 210],
+            itemStyle: { color: '#4dabf7' },
+            lineStyle: { width: 3, color: '#4dabf7' },
+            symbol: 'circle',
+            symbolSize: 8,
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(77, 171, 247, 0.5)' },
+                { offset: 1, color: 'rgba(77, 171, 247, 0.1)' }
+              ])
+            }
+          }]
+        });
+        console.log("订阅量趋势统计图表初始化完成");
+        
+        // 监听窗口大小变化
+        window.addEventListener('resize', function() {
+          subscriberChart.resize();
+          trendChart.resize();
+        });
+        
+      } catch (error) {
+        console.error("独立初始化图表失败:", error);
+      }
+    }, 1000);  // 延迟1秒确保DOM已完全渲染
+  });
+</script>
+</body>
+</html> 

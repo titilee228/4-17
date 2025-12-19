@@ -1,0 +1,268 @@
+{
+  "id": "",
+  "name": "",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "441341",
+      "name": "信号",
+      "font_class": "xinhao",
+      "unicode": "e697",
+      "unicode_decimal": 59031
+    },
+    {
+      "icon_id": "2268046",
+      "name": "卫星",
+      "font_class": "weixing",
+      "unicode": "e606",
+      "unicode_decimal": 58886
+    },
+    {
+      "icon_id": "2298470",
+      "name": "系统",
+      "font_class": "xitong",
+      "unicode": "e60f",
+      "unicode_decimal": 58895
+    },
+    {
+      "icon_id": "3153245",
+      "name": "系统",
+      "font_class": "xitong1",
+      "unicode": "e744",
+      "unicode_decimal": 59204
+    },
+    {
+      "icon_id": "3653647",
+      "name": "系统",
+      "font_class": "xitong2",
+      "unicode": "e65e",
+      "unicode_decimal": 58974
+    },
+    {
+      "icon_id": "3916544",
+      "name": "系统",
+      "font_class": "xitong3",
+      "unicode": "e64f",
+      "unicode_decimal": 58959
+    },
+    {
+      "icon_id": "3977831",
+      "name": "系统",
+      "font_class": "xitong4",
+      "unicode": "e617",
+      "unicode_decimal": 58903
+    },
+    {
+      "icon_id": "5353505",
+      "name": "导航地址",
+      "font_class": "daohangdizhi",
+      "unicode": "e65f",
+      "unicode_decimal": 58975
+    },
+    {
+      "icon_id": "5983093",
+      "name": "无线电波",
+      "font_class": "wuxiandianbo",
+      "unicode": "ec79",
+      "unicode_decimal": 60537
+    },
+    {
+      "icon_id": "6348676",
+      "name": "硬件",
+      "font_class": "yingjian",
+      "unicode": "ec89",
+      "unicode_decimal": 60553
+    },
+    {
+      "icon_id": "6965098",
+      "name": "卫星",
+      "font_class": "weixing1",
+      "unicode": "e618",
+      "unicode_decimal": 58904
+    },
+    {
+      "icon_id": "8306138",
+      "name": "系统",
+      "font_class": "xitong5",
+      "unicode": "e637",
+      "unicode_decimal": 58935
+    },
+    {
+      "icon_id": "9748105",
+      "name": "导航",
+      "font_class": "daohang",
+      "unicode": "e648",
+      "unicode_decimal": 58952
+    },
+    {
+      "icon_id": "9790161",
+      "name": "卫星",
+      "font_class": "weixing2",
+      "unicode": "e790",
+      "unicode_decimal": 59280
+    },
+    {
+      "icon_id": "11536334",
+      "name": "导航",
+      "font_class": "daohang1",
+      "unicode": "e797",
+      "unicode_decimal": 59287
+    },
+    {
+      "icon_id": "12026874",
+      "name": "系统",
+      "font_class": "xitong6",
+      "unicode": "e6e7",
+      "unicode_decimal": 59111
+    },
+    {
+      "icon_id": "14313159",
+      "name": "导航",
+      "font_class": "daohang2",
+      "unicode": "e60a",
+      "unicode_decimal": 58890
+    },
+    {
+      "icon_id": "15784819",
+      "name": "设备",
+      "font_class": "shebei",
+      "unicode": "e74b",
+      "unicode_decimal": 59211
+    },
+    {
+      "icon_id": "15800347",
+      "name": "卫星",
+      "font_class": "weixing3",
+      "unicode": "e75f",
+      "unicode_decimal": 59231
+    },
+    {
+      "icon_id": "17857565",
+      "name": "北斗定位",
+      "font_class": "beidoudingwei",
+      "unicode": "e63d",
+      "unicode_decimal": 58941
+    },
+    {
+      "icon_id": "18170096",
+      "name": "卫星,航天,天文",
+      "font_class": "astronomical-full",
+      "unicode": "e95e",
+      "unicode_decimal": 59742
+    },
+    {
+      "icon_id": "18170102",
+      "name": "信号,基站,信号塔,技术,定位服务,热点",
+      "font_class": "plume-full",
+      "unicode": "e960",
+      "unicode_decimal": 59744
+    },
+    {
+      "icon_id": "23060488",
+      "name": "设备",
+      "font_class": "shebei1",
+      "unicode": "e9fd",
+      "unicode_decimal": 59901
+    },
+    {
+      "icon_id": "24413016",
+      "name": "卫星统筹-卫星运行模拟",
+      "font_class": "weixingtongchou-weixingyunhangmoni",
+      "unicode": "e687",
+      "unicode_decimal": 59015
+    },
+    {
+      "icon_id": "26914818",
+      "name": "消防车北斗数据",
+      "font_class": "xiaofangchebeidoushuju",
+      "unicode": "e726",
+      "unicode_decimal": 59174
+    },
+    {
+      "icon_id": "29635308",
+      "name": "系统",
+      "font_class": "a-xitong3x",
+      "unicode": "e619",
+      "unicode_decimal": 58905
+    },
+    {
+      "icon_id": "33129861",
+      "name": "设备设备",
+      "font_class": "shebeishebei",
+      "unicode": "e607",
+      "unicode_decimal": 58887
+    },
+    {
+      "icon_id": "35701047",
+      "name": "信号 (4)",
+      "font_class": "a-xinhao4",
+      "unicode": "eb85",
+      "unicode_decimal": 60293
+    },
+    {
+      "icon_id": "36085282",
+      "name": "system",
+      "font_class": "xitongsystem",
+      "unicode": "e60c",
+      "unicode_decimal": 58892
+    },
+    {
+      "icon_id": "36158474",
+      "name": "设备 (8)",
+      "font_class": "a-shebei8",
+      "unicode": "ebdd",
+      "unicode_decimal": 60381
+    },
+    {
+      "icon_id": "39480070",
+      "name": "卫星",
+      "font_class": "weixing4",
+      "unicode": "e52b",
+      "unicode_decimal": 58667
+    },
+    {
+      "icon_id": "39690750",
+      "name": "卫星接收探索",
+      "font_class": "a-weixingjieshoutansuo",
+      "unicode": "e798",
+      "unicode_decimal": 59288
+    },
+    {
+      "icon_id": "39694291",
+      "name": "卫星地球网络",
+      "font_class": "a-weixingdiqiuwangluo",
+      "unicode": "e7c5",
+      "unicode_decimal": 59333
+    },
+    {
+      "icon_id": "40098007",
+      "name": "卫星定位",
+      "font_class": "a-weixingdingweitaikongzhanzheng",
+      "unicode": "e89b",
+      "unicode_decimal": 59547
+    },
+    {
+      "icon_id": "40635031",
+      "name": "GPS+北斗",
+      "font_class": "a-GPSbeidou",
+      "unicode": "e61c",
+      "unicode_decimal": 58908
+    },
+    {
+      "icon_id": "40635084",
+      "name": "北斗",
+      "font_class": "beidou",
+      "unicode": "e61e",
+      "unicode_decimal": 58910
+    },
+    {
+      "icon_id": "41215350",
+      "name": "卫星",
+      "font_class": "weixing5",
+      "unicode": "e60d",
+      "unicode_decimal": 58893
+    }
+  ]
+}

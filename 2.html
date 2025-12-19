@@ -1,0 +1,1276 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>站网</title>
+    <link rel="stylesheet" href="font_1/iconfont.css">
+    <link rel="stylesheet" href="device-details-modal.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+
+        body {
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #000B30 0%, #061B82 100%);
+            color: white;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(22, 72, 163, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(22, 72, 163, 0.3) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            height: 60px;
+            background-color: rgba(6, 27, 130, 0.8);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.5);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .system-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 10px rgba(50, 145, 198, 0.7);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            letter-spacing: 0.1em;
+        }
+
+        .user-info {
+            position: absolute;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info::before {
+           /* content: "👤";*/
+            content: "👤";
+            font-size: 16px;
+        }
+        .logout-btn {
+            background-color: rgba(50, 145, 198, 0.3);
+            color: white;
+            border: 1px solid #3291C6;
+            border-radius: 4px;
+            padding: 5px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(50, 145, 198, 0.7);
+            box-shadow: 0 0 10px rgba(50, 145, 198, 0.7);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            height: calc(1080px - 60px);
+        }
+
+        /* Sidebar Menu */
+        .sidebar {
+            width: 250px;
+            background-color: rgba(6, 27, 130, 0.7);
+            height: 100%;
+            padding: 20px 0;
+            border-right: 1px solid rgba(50, 145, 198, 0.3);
+        }
+
+        .menu-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #3291C6;
+            padding: 10px 20px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+            margin-bottom: 15px;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(50, 145, 198, 0.3);
+            color: white;
+        }
+
+        .menu-item.active {
+            background-color: rgba(50, 145, 198, 0.5);
+            color: white;
+            border-left: 3px solid #3291C6;
+        }
+
+        .submenu {
+            padding-left: 20px;
+            display: none;
+        }
+
+        .submenu-item {
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .submenu-item:hover {
+            background-color: rgba(50, 145, 198, 0.3);
+            color: white;
+        }
+
+        .submenu-item.active {
+            background-color: rgba(50, 145, 198, 0.3);
+            color: white;
+            border-left: 3px solid #3291C6;
+        }
+
+        /* 移除原来的菜单样式 */
+        .menu-item.has-submenu::after {
+            content: none;
+        }
+
+        .sub-menu {
+            display: none;
+        }
+
+        /* 设备卡片和查看设备按钮样式 */
+        .station-card {
+            width: 32%;
+            background: rgba(6, 27, 130, 0.5);
+            border: 1px solid rgba(50, 145, 198, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: auto;
+        }
+
+        .station-details {
+            flex: 1;
+            margin-bottom: 15px;
+        }
+
+        .view-devices-btn {
+            margin-top: auto;
+            background-color: rgba(50, 145, 198, 0.3);
+            color: white;
+            border: 1px solid #3291C6;
+            border-radius: 4px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+            align-self: flex-end;
+            width: 100%;
+        }
+
+        /* 设备详情弹出窗口 */
+        .el-drawer {
+            background: rgba(6, 27, 130, 0.75) !important;
+            border: 1px solid rgba(50, 145, 198, 0.5) !important;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) !important;
+            overflow: hidden !important;
+            position: absolute !important;
+            right: 20px !important;
+            top: 592px !important; /* 与stations-row顶部对齐 */
+            bottom: auto !important;
+            left: auto !important;
+            height: auto !important;
+            max-height: 600px !important;
+            width: 1105px !important;
+            transform: none !important;
+            border-radius: 8px !important;
+            backdrop-filter: blur(5px) !important;
+        }
+
+        .el-drawer__header {
+            color: white !important;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.5) !important;
+            padding: 8px 20px !important;
+            margin-bottom: 0 !important;
+        }
+
+        .el-drawer__title {
+            font-size: 18px !important;
+            font-weight: bold !important;
+            color: white !important;
+            text-shadow: 0 0 10px rgba(50, 145, 198, 0.7) !important;
+        }
+
+        .el-drawer__close-btn {
+            color: white !important;
+            font-size: 20px !important;
+        }
+
+        .el-drawer__body {
+            padding: 0 !important;
+            overflow-y: auto !important;
+            max-height: 520px !important;
+        }
+
+        /* Main Content */
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Stats Cards */
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            width: 23%;
+            background: rgba(6, 27, 130, 0.5);
+            border: 1px solid rgba(50, 145, 198, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            background: rgba(6, 27, 130, 0.7);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #3291C6;
+        }
+
+        .stat-icon {
+            width: 30px;
+            height: 30px;
+            background-color: rgba(50, 145, 198, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 5px 0;
+            color: white;
+        }
+
+        .stat-desc {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Middle Row - Map and Alerts */
+        .middle-row {
+            display: flex;
+            margin-bottom: 20px;
+            height: 380px;
+        }
+
+        .map-container, .alerts-container {
+            flex: 1;
+            margin: 0 10px;
+            background: rgba(6, 27, 130, 0.5);
+            border: 1px solid rgba(50, 145, 198, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .map-container {
+            margin-left: 0;
+        }
+
+        .alerts-container {
+            margin-right: 0;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .status-indicators {
+            display: flex;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin-left: 15px;
+            font-size: 12px;
+        }
+
+        .indicator-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .normal {
+            background-color: #4CAF50;
+        }
+
+        .warning {
+            background-color: #FFC107;
+        }
+
+        .error {
+            background-color: #F44336;
+        }
+
+        /* Map Styles */
+        .map-placeholder {
+            width: 100%;
+            height: calc(100% - 40px);
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+
+            background-image: url(map.jpg);
+            background-size:cover;
+        }
+
+        .map-placeholder::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M0,0 L100,0 L100,100 L0,100 Z" fill="none" stroke="%233291C6" stroke-width="0.5"/></svg>');
+            background-size: 100px 100px;
+            opacity: 0.3;
+        }
+
+        .map-marker {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+        }
+
+        .map-marker::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            top: -2px;
+            left: -2px;
+            opacity: 0.4;
+        }
+
+        .map-marker.normal {
+            background-color: #4CAF50;
+            box-shadow: 0 0 10px #4CAF50;
+        }
+
+        .map-marker.warning {
+            background-color: #FFC107;
+            box-shadow: 0 0 10px #FFC107;
+        }
+
+        .map-marker.error {
+            background-color: #F44336;
+            box-shadow: 0 0 10px #F44336;
+        }
+
+        .map-tooltip {
+            position: absolute;
+            background-color: rgba(6, 27, 130, 0.9);
+            border: 1px solid #3291C6;
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 12px;
+            z-index: 100;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* Alerts Styles */
+        .alerts-list {
+            height: calc(100% - 40px);
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            animation: pulse 2s infinite;
+        }
+
+        .alert-item.warning {
+            background-color: rgba(255, 193, 7, 0.2);
+            border-left: 3px solid #FFC107;
+            color: #FFC107;
+        }
+
+        .alert-item.error {
+            background-color: rgba(244, 67, 54, 0.2);
+            border-left: 3px solid #F44336;
+            color: #F44336;
+        }
+
+        .alert-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        /* Station Cards */
+        .stations-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .station-card {
+            width: 32%;
+            background: rgba(6, 27, 130, 0.5);
+            border: 1px solid rgba(50, 145, 198, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .station-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .station-image {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 80px;
+            height: 80px;
+            opacity: 0.3;
+
+        }
+
+        .station-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+            width: 412px;
+        }
+
+        .station-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .station-name {
+            font-size: 16px;
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .station-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+        }
+
+        .detail-label {
+            color: #3291C6;
+            margin-right: 5px;
+            min-width: 80px;
+        }
+
+        .detail-value {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .normal-text {
+            color: #4CAF50;
+        }
+
+        .warning-text {
+            color: #FFC107;
+        }
+
+        .error-text {
+            color: #F44336;
+        }
+
+        .view-devices-btn {
+            width: 100%;
+            background-color: rgba(50, 145, 198, 0.3);
+            color: white;
+            border: 1px solid #3291C6;
+            border-radius: 4px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .view-devices-btn:hover {
+            background-color: rgba(50, 145, 198, 0.7);
+            box-shadow: 0 0 10px rgba(50, 145, 198, 0.5);
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 1919px) {
+            body {
+                transform: scale(0.95);
+                transform-origin: top left;
+            }
+        }
+
+.top-nav{
+position: relative;
+}
+.user-info{
+    float: right;
+    position: absolute;
+    right: 20px;
+}
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    color: #3291C6;
+  /*  justify-content: space-between; */ /* 新增：使图标和标题分开 */
+}
+
+.stat-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-left: 10px;  /* 新增：标题与图标间距 */
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 10px 0;
+    color: white;
+    text-align: center;  /* 新增：数值居中 */
+}
+
+.stat-desc {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;  /* 新增：描述文字居中 */
+    padding: 0 10px;  /* 新增：增加内边距 */
+}
+.stat-icon {
+    width: 30px;
+    height: 30px;
+    background-color: rgba(50, 145, 198, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-family: "iconfont" !important; /* 添加iconfont字体 */
+    font-size: 16px;
+    font-style: normal;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.stats-row {
+    display: flex;
+    justify-content: space-between; /* 均匀分布 */
+    margin-bottom: 20px;
+    width: 100%; /* 确保宽度填满容器 */
+}
+
+.stat-card {
+    flex: 1; /* 等宽分布 */
+    margin: 0 10px; /* 左右间距 */
+    background: rgba(6, 27, 130, 0.2);
+    border: 1px solid rgba(50, 145, 198, 0.5);
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+}
+
+.stat-card:first-child {
+    margin-left: 0; /* 第一个卡片左边距为0 */
+}
+
+.stat-card:last-child {
+    margin-right: 0; /* 最后一个卡片右边距为0 */
+    position: relative;
+}
+
+.stat-card:last-child::after {
+    content: '';
+    position: absolute;
+    right: -1px; /* 对齐右边线 */
+    top: 0;
+    height: 100%;
+    width: 1px;
+    background: transparent; /* 可视对齐辅助线 */
+}
+@font-face {
+  font-family: 'iconfont';
+  src: url('font_1/iconfont.ttf?t=1744774694627') format('truetype');
+}
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+ .user-info::before {
+           /* content: "👤";*/
+            font-size: 16px;
+              font-family: 'iconfont';
+      content: '\e619';
+      /* 这里的 \e600 是示例 Unicode 编码，需替换为实际的编码 */
+      /*color: #333;*/
+        }
+        .stat-header-title{
+            font-weight: 900;
+        }
+
+        .icon-weixing1:before {
+    content: "\e618";
+    font-size: 60px;
+    color: #2464BF;
+}
+
+/* 去掉遮罩层 */
+.v-modal {
+    display: none !important;
+}
+
+/* 自定义模态遮罩层样式 */
+.v-modal {
+    display: block !important;
+    opacity: 0.5 !important; /* 50%的黑色透明度 */
+    background-color: #000 !important;
+    z-index: 2000 !important; /* 确保在页面内容之上 */
+}
+
+/* 修改device-card在el-drawer中的样式 */
+.devices-container .device-card {
+    width: 340px;
+    height: 280px !important; /* 固定高度确保所有卡片一致 */
+    background: rgba(6, 27, 130, 0.2);
+    border: 1px solid rgba(50, 145, 198, 0.5);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
+    transition: all 0.3s;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 设置device-header的底部边线宽度 */
+.devices-container .device-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+    width: 250px !important;
+}
+
+/* 确保device-details在卡片内垂直居中 */
+.devices-container .device-details {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    font-size: 12px;
+    overflow: auto;
+}
+
+/* 全新的气象仪设备面板样式 - 使用绝对定位布局 */
+.weather-device .device-details {
+    position: relative !important;
+    height: 180px !important; /* 固定高度区域用于定位 */
+    margin-top: -21px !important;
+}
+
+.weather-device .detail-item {
+    position: absolute !important;
+    left: 0 !important;
+    width: 100% !important;
+}
+
+.weather-device .detail-item:nth-child(1) {
+    top: 20px !important;
+}
+
+.weather-device .detail-item:nth-child(2) {
+    top: 50px !important;
+}
+
+.weather-device .detail-item:nth-child(3) {
+    top: 80px !important;
+}
+
+.weather-device .detail-item:nth-child(4) {
+    top: 110px !important;
+}
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Top Navigation -->
+        <div class="top-nav">
+            <div class="system-title">站网管理</div>
+            <div class="user-info">
+                <span>管理员</span>
+                <button class="logout-btn">退出</button>
+            </div>
+        </div>
+
+        <!-- Main Container -->
+        <div class="main-container">
+            <!-- Sidebar Menu -->
+            <aside class="sidebar" id="sidebar">
+                <div class="menu-title">站网管理</div>
+                <div class="menu-item active">设备状态监视</div>
+                <div class="menu-item">设备远程控制</div>
+                <div class="submenu">
+                    <div class="submenu-item">远程控制</div>
+                    <div class="submenu-item">指令控制</div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <div class="content">
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon iconfont icon-weixing2"></div>
+                            <div class="stat-header-title">站点总数</div>
+                        </div>
+                        <div class="stat-value">128</div>
+                        <div class="stat-desc">全国基准站总数</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon iconfont icon-weixing2"></div>
+                            <div class="stat-header-title">在线站点</div>
+                        </div>
+                        <div class="stat-value">118</div>
+                        <div class="stat-desc">正常运行中的基准站</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon iconfont icon-weixing2"></div>
+                            <div class="stat-header-title">故障站点</div>
+                        </div>
+                        <div class="stat-value">5</div>
+                        <div class="stat-desc">存在严重问题的基准站</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon iconfont icon-weixing2"></div>
+                            <div class="stat-header-title">告警数量</div>
+                        </div>
+                        <div class="stat-value">12</div>
+                        <div class="stat-desc">当前活动告警</div>
+                    </div>
+                </div>
+
+                <!-- Middle Row - Map and Alerts -->
+                <div class="middle-row">
+                    <!-- Map Container -->
+            <div class="map-container">
+                    <div class="section-header">
+                        <div class="section-title">站点分布</div>
+                        <div class="status-indicators">
+                            <div class="status-indicator">
+                                <div class="indicator-dot normal"></div>
+                                <div>正常</div>
+                            </div>
+                            <div class="status-indicator">
+                                <div class="indicator-dot warning"></div>
+                                <div>警告</div>
+                            </div>
+                            <div class="status-indicator">
+                                <div class="indicator-dot error"></div>
+                                <div>异常</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="map-placeholder" id="map">
+                        <div class="map-tooltip" id="map-tooltip"></div>
+                        <!-- Map markers will be added by JavaScript -->
+                    <div class="map-marker normal" data-name="上海基准站" data-region="华东" data-count="42" style="left: 65%; top: 60%;"></div><div class="map-marker error" data-name="北京基准站" data-region="华北" data-count="38" style="left: 55%; top: 45%;"></div><div class="map-marker error" data-name="武汉基准站" data-region="华中" data-count="15" style="left: 65%; top: 55%;"></div><div class="map-marker warning" data-name="西安基准站" data-region="西北" data-count="12" style="left: 60%; top: 45%;"></div><div style="position: absolute; width: 80%; height: 80%; top: 10%; left: 10%; border: 1px solid rgba(50, 145, 198, 0.5); border-radius: 50% 30% 40%;"></div></div>
+                </div>
+
+                    <!-- Alerts Container -->
+                    <div class="alerts-container">
+                        <div class="section-header">
+                            <div class="section-title">实时告警信息</div>
+                            <div class="status-indicators">
+                                <div class="status-indicator">
+                                    <div class="indicator-dot warning"></div>
+                                    <div>警告 (8)</div>
+                                </div>
+                                <div class="status-indicator">
+                                    <div class="indicator-dot error"></div>
+                                    <div>异常 (4)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alerts-list">
+                            <div class="alert-item warning">
+                                <div class="alert-icon">⚠️</div>
+                                <div>上海基准站 UPS 电池容量低于 30%</div>
+                            </div>
+                            <div class="alert-item error">
+                                <div class="alert-icon">❌</div>
+                                <div>南京基准站接收机通信中断</div>
+                            </div>
+                            <div class="alert-item warning">
+                                <div class="alert-icon">⚠️</div>
+                                <div>杭州基准站天线电压异常</div>
+                            </div>
+                            <div class="alert-item warning">
+                                <div class="alert-icon">⚠️</div>
+                                <div>成都基准站内存使用率超过 85%</div>
+                            </div>
+                            <div class="alert-item error">
+                                <div class="alert-icon">❌</div>
+                                <div>武汉基准站数据存储异常</div>
+                            </div>
+                           <!--  <div class="alert-item warning">
+                                <div class="alert-icon">⚠️</div>
+                                <div>西安基准站通信延迟超过阈值</div>
+                            </div> -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stations Row -->
+                <div class="stations-row">
+                    <!-- Shanghai Station -->
+                    <div class="station-card">
+                      <span class="station-image iconfont icon-weixing1"></span>
+                        <div class="station-header">
+                            <div class="station-status normal"></div>
+                            <div class="station-name">上海基准站</div>
+                        </div>
+                        <div class="station-details">
+                            <div class="detail-item">
+                                <div class="detail-label">站内设备总数:</div>
+                                <div class="detail-value">12</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">运行状态:</div>
+                                <div class="detail-value normal-text">正常运行</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">运行时长:</div>
+                                <div class="detail-value">8760 小时</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">位置:</div>
+                                <div class="detail-value">华东地区 (31.23°N, 121.47°E)</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">站类型:</div>
+                                <div class="detail-value">框架基准站(地基)</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">站功能:</div>
+                                <div class="detail-value">基准框架构建，广域差分结算</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">接收机状态:</div>
+                                <div class="detail-value normal-text">正常 (内存 45%, 天线良好)</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">UPS状态:</div>
+                                <div class="detail-value warning-text">输入 220V, 输出 220V, 电池 28%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">通信状态:</div>
+                                <div class="detail-value normal-text">速率 10Mbps, 调制解调器正常</div>
+                            </div>
+                        </div>
+                        <button class="view-devices-btn" @click="showDeviceDetails('上海基准站')">查看具体设备</button>
+                    </div>
+
+                    <!-- Nanjing Station -->
+                    <div class="station-card">
+                         <span class="station-image iconfont icon-weixing1"></span>
+                        <div class="station-header">
+                            <div class="station-status error"></div>
+                            <div class="station-name">南京基准站</div>
+                        </div>
+                        <div class="station-details">
+                            <div class="detail-item">
+                                <div class="detail-label">站内设备总数:</div>
+                                <div class="detail-value">15</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">运行状态:</div>
+                                <div class="detail-value error-text">设备故障</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">运行时长:</div>
+                                <div class="detail-value">12430 小时</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">位置:</div>
+                                <div class="detail-value">华东地区 (32.04°N, 118.77°E)</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">站类型:</div>
+                                <div class="detail-value">观测基准站(地基)</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">站功能:</div>
+                                <div class="detail-value">GNSS监测</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">接收机状态:</div>
+                                <div class="detail-value error-text">通信中断</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">UPS状态:</div>
+                                <div class="detail-value normal-text">输入 220V, 输出 220V, 电池 85%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">通信状态:</div>
+                                <div class="detail-value warning-text">速率 2Mbps, 调制解调器不稳定</div>
+                            </div>
+                        </div>
+                        <button class="view-devices-btn" @click="showDeviceDetails('南京基准站')">查看具体设备</button>
+                    </div>
+
+                    <!-- Hangzhou Station -->
+                    <div class="station-card">
+                        <span class="station-image iconfont icon-weixing1"></span>
+                        <div class="station-header">
+                            <div class="station-status warning"></div>
+                            <div class="station-name">杭州基准站</div>
+                        </div>
+                        <div class="station-details">
+                            <div class="detail-item">
+                                <div class="detail-label">站内设备总数:</div>
+                                <div class="detail-value">10</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">运行状态:</div>
+                                <div class="detail-value warning-text">待检查</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">运行时长:</div>
+                                <div class="detail-value">6540 小时</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">位置:</div>
+                                <div class="detail-value">华东地区 (30.27°N, 120.15°E)</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">站类型:</div>
+                                <div class="detail-value">星基增强基准站</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">站功能:</div>
+                                <div class="detail-value">GNSS监测，SBAS监测</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">接收机状态:</div>
+                                <div class="detail-value warning-text">内存 82%, 天线电压异常</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">UPS状态:</div>
+                                <div class="detail-value normal-text">输入 220V, 输出 220V, 电池 65%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">通信状态:</div>
+                                <div class="detail-value normal-text">速率 8Mbps, 调制解调器正常</div>
+                            </div>
+                        </div>
+                        <button class="view-devices-btn" @click="showDeviceDetails('杭州基准站')">查看具体设备</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设备详情弹出窗口 -->
+        <el-drawer
+            :title="currentStation + '—设备详情'"
+            :visible.sync="drawerVisible"
+            direction="rtl"
+            size="80%"
+            :before-close="handleClose"
+            :modal="true"
+            ref="deviceDrawer">
+            <div class="devices-container">
+                <!-- 原子钟设备 -->
+                <div class="device-card">
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='none' stroke='%233291C6' stroke-width='2'/><circle cx='50' cy='50' r='30' fill='none' stroke='%233291C6' stroke-width='1'/><path d='M50,10 L50,20 M80,50 L70,50 M50,90 L50,80 M20,50 L30,50' stroke='%233291C6' stroke-width='2'/></svg>" 
+                         class="device-image">
+                    <div class="device-header">
+                        <div class="device-status normal"></div>
+                        <div class="device-name">原子钟设备 <span class="device-model">(型号: ATC-2000)</span></div>
+                    </div>
+                    <div class="device-details">
+                        <div class="detail-item">
+                            <div class="detail-label">定位结果:</div>
+                            <div class="detail-value normal-text">定位成功</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">经纬度:</div>
+                            <div class="detail-value">31.23°N, 121.47°E</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">高度:</div>
+                            <div class="detail-value">45.6米</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">PDOP:</div>
+                            <div class="detail-value">1.2</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">HDOP:</div>
+                            <div class="detail-value">0.8</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">VDOP:</div>
+                            <div class="detail-value">0.9</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">卫星数:</div>
+                            <div class="detail-value">12</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">电源状态:</div>
+                            <div class="detail-value normal-text">正常 (电压: 12.3V)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 气象仪设备 -->
+                <div class="device-card weather-device">
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50,20 L50,40 M30,30 L40,40 M70,30 L60,40 M30,70 L70,70 L70,50 L30,50 Z' fill='none' stroke='%233291C6' stroke-width='2'/><circle cx='50' cy='60' r='5' fill='%233291C6'/></svg>" 
+                         class="device-image">
+                    <div class="device-header">
+                        <div class="device-status warning"></div>
+                        <div class="device-name">气象仪设备 <span class="device-model">(型号: WTS-100)</span></div>
+                    </div>
+                    <div class="device-details">
+                        <div class="detail-item">
+                            <div class="detail-label">温度:</div>
+                            <div class="detail-value">25.6°C</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">湿度:</div>
+                            <div class="detail-value">68%</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">气压:</div>
+                            <div class="detail-value">1012.5 hPa</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">电源状态:</div>
+                            <div class="detail-value warning-text">电压偏低 (11.2V)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 接收机设备 -->
+                <div class="device-card">
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='20' y='30' width='60' height='40' fill='none' stroke='%233291C6' stroke-width='2'/><path d='M30,20 L40,30 M70,20 L60,30 M50,10 L50,30' fill='none' stroke='%233291C6' stroke-width='2'/><circle cx='35' cy='50' r='3' fill='%233291C6'/><circle cx='50' cy='50' r='3' fill='%233291C6'/><circle cx='65' cy='50' r='3' fill='%233291C6'/></svg>" 
+                         class="device-image">
+                    <div class="device-header">
+                        <div class="device-status normal"></div>
+                        <div class="device-name">接收机设备 <span class="device-model">(型号: GRS-3000)</span></div>
+                    </div>
+                    <div class="device-details">
+                        <div class="detail-item">
+                            <div class="detail-label">BDS数据:</div>
+                            <div class="detail-value normal-text">正常 (12颗卫星)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">GPS数据:</div>
+                            <div class="detail-value normal-text">正常 (10颗卫星)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">GLONASS数据:</div>
+                            <div class="detail-value normal-text">正常 (8颗卫星)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">码伪距:</div>
+                            <div class="detail-value">±0.5m</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">载波相位值:</div>
+                            <div class="detail-value">0.25周</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">多普勒频移:</div>
+                            <div class="detail-value">±2.5Hz</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">信噪比:</div>
+                            <div class="detail-value">45dB</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">导航电文:</div>
+                            <div class="detail-value normal-text">接收正常</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </el-drawer>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    drawerVisible: false,
+                    currentStation: '上海基准站'
+                }
+            },
+            methods: {
+                showDeviceDetails(stationName) {
+                    this.currentStation = stationName;
+                    this.drawerVisible = true;
+                },
+                handleClose(done) {
+                    this.drawerVisible = false;
+                    done();
+                }
+            },
+            mounted() {
+                // 菜单交互
+                const submenuItems = document.querySelectorAll('.submenu-item');
+                submenuItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        submenuItems.forEach(i => i.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+
+                // 菜单项点击事件
+                const menuItems = document.querySelectorAll('.menu-item:not(.active)');
+                menuItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        // 如果不是已经激活的菜单项
+                        if (!this.classList.contains('active')) {
+                            // 移除所有菜单项的激活状态
+                            document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                            // 激活当前点击的菜单项
+                            this.classList.add('active');
+                            
+                            // 如果有子菜单，显示它
+                            const nextElement = this.nextElementSibling;
+                            if (nextElement && nextElement.classList.contains('submenu')) {
+                                nextElement.style.display = 'block';
+                            }
+                        }
+                    });
+                });
+
+                // 默认显示设备远程控制的子菜单
+                document.querySelector('.submenu').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

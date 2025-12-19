@@ -1,0 +1,110 @@
+/* 设备详情弹出窗口的样式 */
+.devices-container {
+    display: flex;
+    padding: 20px;
+    gap: 20px;
+    height: auto;
+    align-items: flex-start;
+    overflow-y: visible;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.device-card {
+    width: 340px;
+    background: rgba(6, 27, 130, 0.2);
+    border: 1px solid rgba(50, 145, 198, 0.5);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
+    transition: all 0.3s;
+    flex: none;
+}
+
+.device-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    background: rgba(6, 27, 130, 0.4);
+}
+
+.device-image {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 60px;
+    height: 60px;
+    opacity: 0.3;
+}
+
+.device-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+}
+
+.device-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.device-status.normal {
+    background-color: #4CAF50;
+}
+
+.device-status.warning {
+    background-color: #FFC107;
+}
+
+.device-status.error {
+    background-color: #F44336;
+}
+
+.device-name {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.device-model {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-left: 10px;
+}
+
+.device-details {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.detail-item {
+    display: flex;
+}
+
+.detail-label {
+    color: #3291C6;
+    margin-right: 5px;
+    min-width: 100px;
+}
+
+.detail-value {
+    flex: 1;
+    word-break: break-word;
+}
+
+.normal-text {
+    color: #4CAF50;
+}
+
+.warning-text {
+    color: #FFC107;
+}
+
+.error-text {
+    color: #F44336;
+} 

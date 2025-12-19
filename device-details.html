@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备详情</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #000B30 0%, #061B82 100%);
+            color: white;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(22, 72, 163, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(22, 72, 163, 0.3) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+        }
+
+        .devices-container {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            height: auto; /* 改为自动高度 */
+            align-items: flex-start; /* 顶部对齐 */
+            overflow-y: hidden; /* 隐藏垂直滚动条 */
+        }
+
+        .device-card {
+            flex: 1;
+            background: rgba(6, 27, 130, 0.2); /* 透明度降低到0.2 */
+            border: 1px solid rgba(50, 145, 198, 0.5);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+            height: auto; /* 自动高度 */
+            min-height: auto; /* 移除固定最小高度 */
+            overflow: hidden; /* 确保不出现滚动条 */
+        }
+
+        .devices-container {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            height: auto;
+            align-items: center; /* 垂直居中 */
+            overflow: hidden;
+        }
+
+        .device-card {
+            width: 340px; /* 固定宽度 */
+            height: 280px; /* 固定高度 */
+            background: rgba(6, 27, 130, 0.2);
+            border: 1px solid rgba(50, 145, 198, 0.5);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            flex: none; /* 取消flex自动伸缩 */
+        }
+
+        .el-drawer {
+            width: 1105px !important;
+            height: auto !important;
+            max-height: 90vh !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            margin: 0 !important;
+            background: rgba(6, 27, 130, 0.92) !important;
+            border: 1px solid rgba(50, 145, 198, 0.5) !important;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5) !important;
+            overflow: hidden !important;
+        }
+
+        .devices-container {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            height: auto;
+            align-items: flex-start;
+            overflow: hidden;
+        }
+
+        .el-drawer {
+            height: auto !important; /* 改为自动高度 */
+            max-height: 90vh !important; /* 最大高度为视口90% */
+            top: 50% !important;
+            /* transform: translateY(-50%) !important; */
+            margin: 20px 0 !important; /* 增加上下边距 */
+            background: rgba(6, 27, 130, 0.92) !important;
+            border-left: 1px solid #3291C6 !important;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5) !important;
+            overflow: hidden !important; /* 隐藏抽屉滚动条 */
+        }
+
+        .device-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            background: rgba(6, 27, 130, 0.4); /* 悬停时透明度从0.5调整为0.4 */
+        }
+
+        .device-image {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 60px;
+            height: 60px;
+            opacity: 0.3;
+        }
+
+        .device-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.3);
+        }
+
+        .device-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .device-status.normal {
+            background-color: #4CAF50;
+        }
+
+        .device-status.warning {
+            background-color: #FFC107;
+        }
+
+        .device-status.error {
+            background-color: #F44336;
+        }
+
+        .device-name {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .device-model {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-left: 10px;
+        }
+
+        .device-details {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+        }
+
+        .detail-label {
+            color: #3291C6;
+            margin-right: 5px;
+            min-width: 100px;
+        }
+
+        .detail-value {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .normal-text {
+            color: #4CAF50;
+        }
+
+        .warning-text {
+            color: #FFC107;
+        }
+
+        .error-text {
+            color: #F44336;
+        }
+
+        .el-drawer {
+            background: rgba(6, 27, 130, 0.5) !important;
+            border-left: 1px solid #3291C6 !important;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .el-drawer__header {
+            color: white !important;
+            border-bottom: 1px solid rgba(50, 145, 198, 0.5) !important;
+            padding: 20px !important;
+            margin-bottom: 0 !important;
+        }
+
+        .el-drawer__title {
+            font-size: 20px !important;
+            text-shadow: 0 0 10px rgba(50, 145, 198, 0.7) !important;
+        }
+
+        .el-drawer__close-btn {
+            color: white !important;
+            font-size: 20px !important;
+        }
+
+        .v-modal {
+            background-color: rgba(0, 0, 0, 0.7) !important;
+            backdrop-filter: blur(3px);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <el-drawer
+            title="上海基准站—设备详情"
+            :visible.sync="drawerVisible"
+            direction="rtl"
+            size="80%"
+            :before-close="handleClose">
+            <div class="devices-container">
+                <!-- 原子钟设备 -->
+                <div class="device-card">
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='none' stroke='%233291C6' stroke-width='2'/><circle cx='50' cy='50' r='30' fill='none' stroke='%233291C6' stroke-width='1'/><path d='M50,10 L50,20 M80,50 L70,50 M50,90 L50,80 M20,50 L30,50' stroke='%233291C6' stroke-width='2'/></svg>" 
+                         class="device-image">
+                    <div class="device-header">
+                        <div class="device-status normal"></div>
+                        <div class="device-name">原子钟设备 <span class="device-model">(型号: ATC-2000)</span></div>
+                    </div>
+                    <div class="device-details">
+                        <div class="detail-item">
+                            <div class="detail-label">定位结果:</div>
+                            <div class="detail-value normal-text">定位成功</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">经纬度:</div>
+                            <div class="detail-value">31.23°N, 121.47°E</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">高度:</div>
+                            <div class="detail-value">45.6米</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">PDOP:</div>
+                            <div class="detail-value">1.2</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">HDOP:</div>
+                            <div class="detail-value">0.8</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">VDOP:</div>
+                            <div class="detail-value">0.9</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">卫星数:</div>
+                            <div class="detail-value">12</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">电源状态:</div>
+                            <div class="detail-value normal-text">正常 (电压: 12.3V)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 气象仪设备 -->
+                <div class="device-card">
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50,20 L50,40 M30,30 L40,40 M70,30 L60,40 M30,70 L70,70 L70,50 L30,50 Z' fill='none' stroke='%233291C6' stroke-width='2'/><circle cx='50' cy='60' r='5' fill='%233291C6'/></svg>" 
+                         class="device-image">
+                    <div class="device-header">
+                        <div class="device-status warning"></div>
+                        <div class="device-name">气象仪设备 <span class="device-model">(型号: WTS-100)</span></div>
+                    </div>
+                    <div class="device-details">
+                        <div class="detail-item">
+                            <div class="detail-label">温度:</div>
+                            <div class="detail-value">25.6°C</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">湿度:</div>
+                            <div class="detail-value">68%</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">气压:</div>
+                            <div class="detail-value">1012.5 hPa</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">电源状态:</div>
+                            <div class="detail-value warning-text">电压偏低 (11.2V)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 接收机设备 -->
+                <div class="device-card">
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='20' y='30' width='60' height='40' fill='none' stroke='%233291C6' stroke-width='2'/><path d='M30,20 L40,30 M70,20 L60,30 M50,10 L50,30' fill='none' stroke='%233291C6' stroke-width='2'/><circle cx='35' cy='50' r='3' fill='%233291C6'/><circle cx='50' cy='50' r='3' fill='%233291C6'/><circle cx='65' cy='50' r='3' fill='%233291C6'/></svg>" 
+                         class="device-image">
+                    <div class="device-header">
+                        <div class="device-status normal"></div>
+                        <div class="device-name">接收机设备 <span class="device-model">(型号: GRS-3000)</span></div>
+                    </div>
+                    <div class="device-details">
+                        <div class="detail-item">
+                            <div class="detail-label">BDS数据:</div>
+                            <div class="detail-value normal-text">正常 (12颗卫星)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">GPS数据:</div>
+                            <div class="detail-value normal-text">正常 (10颗卫星)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">GLONASS数据:</div>
+                            <div class="detail-value normal-text">正常 (8颗卫星)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">码伪距:</div>
+                            <div class="detail-value">±0.5m</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">载波相位值:</div>
+                            <div class="detail-value">0.25周</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">多普勒频移:</div>
+                            <div class="detail-value">±2.5Hz</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">信噪比:</div>
+                            <div class="detail-value">45dB</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">导航电文:</div>
+                            <div class="detail-value normal-text">接收正常</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </el-drawer>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    drawerVisible: true,
+                    currentStation: '上海基准站'
+                }
+            },
+            methods: {
+                handleClose(done) {
+                    done();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
